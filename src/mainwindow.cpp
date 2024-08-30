@@ -36,9 +36,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->HELM_Data_lineEdit->setText(m_helmDataPath);
 
-    ui->prompts_treeWidget->setColumnCount(8);
+    const int prompt_tree_column_count = 8;
+    const int cid_column = 0;
+    ui->prompts_treeWidget->setColumnCount(prompt_tree_column_count);
     ui->prompts_treeWidget->setHeaderLabels({"Custom Dataset ID", "Dataset name / Prompt ID", "Dataset_base", "Dataset_spec", "IsPrompt", "Prompt", "HasSpecs", "Selected"});
-    ui->prompts_treeWidget->setColumnWidth(0, 120);
+    ui->prompts_treeWidget->setColumnWidth(cid_column, 120);
     ui->prompts_treeWidget->hideColumn(2);
     ui->prompts_treeWidget->hideColumn(3);
     ui->prompts_treeWidget->hideColumn(4);
@@ -966,11 +968,7 @@ void MainWindow::on_exportOptions_pushButton_clicked()
 
 void MainWindow::on_prompts_treeWidget_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
-    if (!current) {
-        return;
-    }
-
-    if (!isPrompt(current)) {
+    if (!current || !isPrompt(current)) {
         return;
     }
 
