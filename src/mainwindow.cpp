@@ -1,24 +1,28 @@
 #include "mainwindow.hpp"
 #include "./ui_mainwindow.h"
 
+#include <algorithm>
 #include <map>
 
-#include <QtAssert>
-#include <QCheckBox>
-#include <QDir>
 #include <QFile>
 #include <QFileDialog>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QList>
+#include <QMap>
 #include <QMessageBox>
+#include <QPair>
+#include <QSettings>
 #include <QShortcut>
 #include <QStandardPaths>
-#include <QSysInfo>
-#include <QTimer>
+#include <QString>
+#include <QStringList>
+#include <QWidgetItem>
 #include <QTreeWidgetItem>
 
 #include "exportoptionsdialog.hpp"
+#include "helperfunctions.hpp"
 #include "queryparser.hpp"
 
 MainWindow::MainWindow(QWidget *parent)

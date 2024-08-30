@@ -1,10 +1,11 @@
 #pragma once
 
 #include <QCloseEvent>
-#include <QDebug>
-#include <QMainWindow>
-#include <QSettings>
+#include <QPair>
 #include <QStack>
+#include <QString>
+#include <QStringList>
+#include <QMainWindow>
 #include <QTreeWidgetItem>
 
 QT_BEGIN_NAMESPACE
