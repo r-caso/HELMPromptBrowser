@@ -497,7 +497,8 @@ void MainWindow::on_filterBySize_CustomInterval_radioButton_toggled(bool checked
 
 void MainWindow::on_HELM_Data_pushButton_clicked()
 {
-    m_helmDataPath = QFileDialog::getExistingDirectory(this, "Select HELM data folder", QStandardPaths::displayName(QStandardPaths::DocumentsLocation));
+    const QString path = QFileDialog::getExistingDirectory(this, "Select HELM data folder", QStandardPaths::displayName(QStandardPaths::DocumentsLocation));
+    m_helmDataPath = path.isEmpty() ? m_helmDataPath : path;
     ui->HELM_Data_lineEdit->setText(m_helmDataPath);
 }
 
