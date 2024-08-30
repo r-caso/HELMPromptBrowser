@@ -689,7 +689,8 @@ void MainWindow::on_undo_pushButton_clicked()
     auto [item, parent] = m_undoStack.pop();
     parent->addChild(item);
 
-    // ui->redo_pushButton->setEnabled(true);
+    m_redoStack.push({item, parent});
+    ui->redo_pushButton->setEnabled(true);
 
     if (m_undoStack.isEmpty()) {
         ui->undo_pushButton->setEnabled(false);
@@ -699,7 +700,15 @@ void MainWindow::on_undo_pushButton_clicked()
 
 void MainWindow::on_redo_pushButton_clicked()
 {
-    qDebug() << "Not implemented";
+    auto [item, parent] = m_redoStack.pop();
+    m_undoStack.push({ item, parent });
+    parent->removeChild(item);
+
+    ui->undo_pushButton->setEnabled(true);
+
+    if (m_redoStack.isEmpty()) {
+        ui->redo_pushButton->setEnabled(false);
+    }
 }
 
 
