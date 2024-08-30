@@ -678,6 +678,7 @@ void MainWindow::on_clear_pushButton_clicked()
 {
     ui->prompts_treeWidget->clear();
     ui->prompt_plainTextEdit->clear();
+    m_currentlySelectedDatasets.clear();
     ui->delete_pushButton->setEnabled(false);
     ui->clear_pushButton->setEnabled(false);
 }
