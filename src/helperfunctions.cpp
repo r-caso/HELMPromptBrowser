@@ -133,9 +133,30 @@ QStringList getFiltersFromDatasetList(const QStringList& dataset_names, const QS
 
 void deleteDatasetFromTree(const QString& dataset_name, QTreeWidget* tree)
 {
-    QList<QTreeWidgetItem*> deletion_list = tree->findItems(dataset_name, Qt::MatchExactly, 1);
-    for (QTreeWidgetItem* dataset : deletion_list) {
-        delete dataset;
+    auto [dataset_base, dataset_spec] = splitDatasetName(dataset_name);
+
+    if (dataset_spec.isEmpty()) {
+        QList<QTreeWidgetItem*> deletion_list = tree->findItems(dataset_base, Qt::MatchExactly, 1);
+        for (QTreeWidgetItem* dataset : deletion_list) {
+            delete dataset;
+        }
+    }
+    else {
+        QList<QTreeWidgetItem*> parent_list = tree->findItems(dataset_base, Qt::MatchExactly, 1);
+        for (QTreeWidgetItem* parent : parent_list) {
+            QTreeWidgetItem* matching_child;
+            const int child_count = parent->childCount();
+            for (int i = 0; i < child_count; ++i) {
+                if (getName(parent->child(i)) == dataset_spec) {
+                    matching_child = parent->child(i);
+                }
+            }
+            parent->removeChild(matching_child);
+            delete matching_child;
+            if (parent->childCount() == 0) {
+                delete parent;
+            }
+        }
     }
 }
 
