@@ -982,18 +982,45 @@ void MainWindow::on_prompts_treeWidget_currentItemChanged(QTreeWidgetItem *curre
 void MainWindow::on_selectPrompt_pushButton_clicked()
 {
     for (QTreeWidgetItem* current_item : ui->prompts_treeWidget->selectedItems()) {
-        current_item->setData(7, Qt::DisplayRole, true);
-        current_item->setForeground(1, Qt::blue);
-        current_item->setBackground(0, Qt::blue);
+        setSelectedStatus(current_item, true);
     }
 }
 
 void MainWindow::on_deselectPrompt_pushButton_clicked()
 {
     for (QTreeWidgetItem* current_item : ui->prompts_treeWidget->selectedItems()) {
-        current_item->setData(7, Qt::DisplayRole, false);
-        current_item->setForeground(1, Qt::darkGray);
-        current_item->setBackground(0, Qt::lightGray);
+        setSelectedStatus(current_item, false);
     }
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    writeSettings();
+    event->accept();
+}
+
+void MainWindow::writeSettings()
+{
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "IIF-SADAF-CONICET", "HELMPromptBrowser");
+
+    settings.setValue("HELM_Path", m_helmDataPath);
+    settings.setValue("Output_Path", m_outputPath);
+    settings.setValue("JSONFile", m_jsonFileName);
+    settings.setValue("CompilationName", m_compilationName);
+    settings.setValue("HELM_JSON", m_helmDataJSON);
+    settings.setValue("IMPORT_JSON_FOLDER", m_importFileFolder);
+    settings.setValue("DontShowAgain", m_DontShowEmptySearchMessage);
+}
+
+void MainWindow::readSettings()
+{
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "IIF-SADAF-CONICET", "HELMPromptBrowser");
+
+    m_helmDataPath = settings.value("HELM_Path").toString();
+    m_outputPath = settings.value("Output_Path").toString();
+    m_jsonFileName = settings.value("JSONFile").toString();
+    m_compilationName = settings.value("CompilationName").toString();
+    m_helmDataJSON = settings.value("HELM_JSON").toString();
+    m_importFileFolder = settings.value("IMPORT_JSON_FOLDER").toString();
+    m_DontShowEmptySearchMessage = settings.value("DontShowAgain").toBool();
+}
