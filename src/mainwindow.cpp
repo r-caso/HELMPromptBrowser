@@ -86,10 +86,10 @@ MainWindow::MainWindow(QWidget *parent)
             "bold:subject=all", {}
         },
         {
-            "boolq", {
-                "boolq",
-                "boolq:only_contrast=True",
-            }
+            "boolq", {}
+        },
+        {
+            "boolq:only_contrast=True", {}
         },
         {
             "civil_comments", {
@@ -166,10 +166,10 @@ MainWindow::MainWindow(QWidget *parent)
             }
         },
         {
-            "imdb", {
-                "imdb",
-                "imdb:only_contrast=True",
-            }
+            "imdb", {}
+        },
+        {
+            "imdb:only_contrast=True", {}
         },
         {
             "legal_support", {
