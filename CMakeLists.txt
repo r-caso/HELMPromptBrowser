@@ -38,6 +38,9 @@ set(PROJECT_SOURCES
         src/logic.hpp
         src/queryparser.hpp
         src/queryparser.cpp
+
+        src/helperfunctions.cpp
+        src/helperfunctions.hpp
 )
 
 include_directories(
