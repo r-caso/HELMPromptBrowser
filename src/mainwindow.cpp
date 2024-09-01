@@ -2,7 +2,9 @@
 #include "./ui_mainwindow.h"
 
 #include <algorithm>
+#include <iostream>
 #include <map>
+#include <tuple>
 
 #include <QFile>
 #include <QFileDialog>
@@ -36,17 +38,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->HELM_Data_lineEdit->setText(m_helmDataPath);
 
-    const int prompt_tree_column_count = 8;
-    const int cid_column = 0;
     ui->prompts_treeWidget->setColumnCount(prompt_tree_column_count);
     ui->prompts_treeWidget->setHeaderLabels({"Custom Dataset ID", "Dataset name / Prompt ID", "Dataset_base", "Dataset_spec", "IsPrompt", "Prompt", "HasSpecs", "Selected"});
     ui->prompts_treeWidget->setColumnWidth(cid_column, 120);
-    ui->prompts_treeWidget->hideColumn(2);
-    ui->prompts_treeWidget->hideColumn(3);
-    ui->prompts_treeWidget->hideColumn(4);
-    ui->prompts_treeWidget->hideColumn(5);
-    ui->prompts_treeWidget->hideColumn(6);
-    ui->prompts_treeWidget->hideColumn(7);
+    ui->prompts_treeWidget->hideColumn(dataset_base_column);
+    ui->prompts_treeWidget->hideColumn(dataset_spec_column);
+    ui->prompts_treeWidget->hideColumn(is_prompt_column);
+    ui->prompts_treeWidget->hideColumn(prompt_contents_column);
+    ui->prompts_treeWidget->hideColumn(is_specified_column);
+    ui->prompts_treeWidget->hideColumn(selection_status_column);
     ui->prompts_treeWidget->header()->setStretchLastSection(true);
     ui->prompts_treeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
@@ -223,7 +223,7 @@ MainWindow::MainWindow(QWidget *parent)
             }
         },
         {
-            "ms_marco", {
+            "msmarco", {
                 "msmarco:track=regular,valid_topk=30",
                 "msmarco:track=trec,valid_topk=30",
             }
@@ -375,62 +375,60 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_search_pushButton_clicked()
 {
+    /*****************************
+     * CHECK SOME PRE-REQUISITES *
+     *****************************/
+
     if (ui->HELM_Data_lineEdit->text().isEmpty()) {
         Warn("No HELM data available");
         return;
     }
-
     if (ui->search_lineEdit->text().isEmpty() && !m_DontShowEmptySearchMessage) {
         if (Ask("Search term is empty.", "This action will match every prompt. Proceed?", m_DontShowEmptySearchMessage) == QMessageBox::No) {
             return;
         }
     }
 
-    const QString search_term = ui->search_lineEdit->text().trimmed().replace("NOT", "!").replace("AND", "&").replace("OR", "|");
+    /*******************************
+     * CHECK QUERY WELL-FORMEDNESS *
+     *******************************/
 
+    const QString search_term = ui->search_lineEdit->text().trimmed().replace("NOT", "!").replace("AND", "&").replace("OR", "|");
     if (!checkQuery(search_term)) {
         Warn("Search query is not well-formed");
         return;
     }
 
-    // build datasets and filter lists
-    QStringList selected_datasets = getSelectedDatasetNames(ui->dataset_treeWidget);
+    /**************************************
+     * GET DATASETS TO ADD TO PROMPT TREE *
+     **************************************/
 
-    qDebug() << "Selected datasets: " << selected_datasets;
-    qDebug() << "Old selection: " << m_currentlySelectedDatasets;
+    const QStringList datasets_to_be_added = getDatasetsToAdd(ui->dataset_treeWidget, ui->prompts_treeWidget, m_currentlySelectedDatasets);
 
-    QStringList to_be_unregistered;
-    for (const QString& current_dataset : m_currentlySelectedDatasets) {
-        if (!selected_datasets.contains(current_dataset)) {
-            deleteDatasetFromTree(current_dataset, ui->prompts_treeWidget);
-            to_be_unregistered.push_back(current_dataset);
-        }
-    }
-    qDebug() << "To be unregistered: " << to_be_unregistered;
-    for (const QString& dataset : to_be_unregistered) {
-        m_currentlySelectedDatasets.removeAll(dataset);
-    }
+    /****************************************************
+     * GET DIRECTORIES WHERE INSTANCE FILES ARE LOCATED *
+     ****************************************************/
 
-    QStringList datasets_to_be_added;
-    std::ranges::copy_if(selected_datasets, std::back_inserter(datasets_to_be_added),
-                         [&](const QString& dataset) -> bool { return !m_currentlySelectedDatasets.contains(dataset); });
-
-    qDebug() << "To be added: " << datasets_to_be_added;
-
-    const QString os = QSysInfo::productType();
-    QStringList filters = getFiltersFromDatasetList(datasets_to_be_added, os);
-    QStringList task_dirs = getHelmTaskDirs(m_helmDataPath, filters);
+    const QStringList task_dirs = getHelmTaskDirs(datasets_to_be_added, m_helmDataPath);
 
     Q_ASSERT_X(task_dirs.size() == datasets_to_be_added.size(), "Taks directories and selected datasets have different cardinalities", "mainwindow.cpp");
 
-    QList<QPair<QList<QString>, QList<QString>>> queries = getQueries(search_term);
-    bool search_is_case_sensitive = ui->search_case_sensitive_checkBox->isChecked();
+    /***********************************************
+     * PARSE QUERY AND SET SEARCH CASE-SENSITIVITY *
+     ***********************************************/
 
-    const int task_dirs_count = task_dirs.count();
-    for (int j = 0; j < task_dirs_count; ++j) {
-        const QString dataset = datasets_to_be_added.at(j);
+    const QList<QPair<QList<QString>, QList<QString>>> queries = getQueries(search_term);
+    const bool search_is_case_sensitive = ui->search_case_sensitive_checkBox->isChecked();
 
-        QJsonDocument instances = getTaskInstances(task_dirs.at(j), m_helmDataPath);
+    /************************
+     * FINALLY, ADD PROMPTS *
+     ************************/
+
+    const size_t task_dirs_count = task_dirs.count();
+    for (size_t j = 0; j < task_dirs_count; ++j) {
+        const QString& dataset = datasets_to_be_added.at(j);
+
+        const QJsonDocument instances = getTaskInstances(task_dirs.at(j), m_helmDataPath);
         if (instances.isEmpty()) {
             return;
         }
@@ -518,8 +516,6 @@ void MainWindow::on_select_all_pushButton_clicked()
 
 void MainWindow::on_loadFromFile_pushButton_clicked()
 {
-    // CLEAR CURRENT SELECTION IN dataset_treeWidget!!
-
     QString fromFile = QFileDialog::getOpenFileName(this, "Select custom compilation file", m_importFileFolder.isEmpty() ? QStandardPaths::displayName(QStandardPaths::DocumentsLocation) : m_importFileFolder, "*.json");
 
     // replace with proper return status check
@@ -527,7 +523,7 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
         return;
     }
 
-    const int pos = fromFile.lastIndexOf("/");
+    const size_t pos = fromFile.lastIndexOf("/");
     m_importFileFolder = fromFile.sliced(0, pos);
 
     QFile jsonFile(fromFile);
@@ -537,10 +533,17 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
         return;
     }
 
+    const int dataset_count = ui->dataset_treeWidget->topLevelItemCount();
+    for (int i = 0; i < dataset_count; ++i) {
+        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(0, Qt::Unchecked);
+    }
+    m_currentlySelectedDatasets.clear();
+
     const QJsonDocument custom_dataset = QJsonDocument::fromJson(jsonFile.readAll());
     const QJsonArray datasets = custom_dataset["datasets"].toArray();
 
     QMap<QString, QStringList> tree;
+    QList<std::tuple<QString, QString, QList<QPair<QString, QString>>>> selected_prompts;
 
     for (auto&& value : datasets) {
         const QJsonObject dataset = value.toObject();
@@ -550,21 +553,104 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
         if (!tree.contains(dataset_name)) {
             tree[dataset_name] = {};
         }
+        if (dataset_spec.isEmpty()) {
+            continue;
+        }
+        if (dataset_name == "legal_support") {
+            tree[dataset_name].push_back(dataset_name + "," + dataset_spec);
+        }
+        else {
+            tree[dataset_name].push_back(dataset_name + ":" + dataset_spec);
+        }
 
-        tree[dataset_name].push_back(dataset_name + ":" + dataset_spec);
+        const QJsonObject samples = dataset[dataset_name]["samples"].toObject();
+        const QStringList prompt_ids = samples.keys();
+        QList<QPair<QString, QString>> selected;
+        for (const QString& prompt_id : prompt_ids) {
+            const QString& cid = samples[prompt_id].toString();
+            selected.push_back({prompt_id, cid});
+        }
+        selected_prompts.push_back({dataset_name, dataset_spec, selected});
     }
 
-    for (auto it = tree.cbegin(); it != tree.cend(); ++it) {
-        qDebug() << it.value();
-        for (const auto& spec : it.value()) {
-            QList<QTreeWidgetItem*> subitems = ui->dataset_treeWidget->findItems(spec, Qt::MatchExactly | Qt::MatchRecursive, 0);
-            for (QTreeWidgetItem* subitem : subitems) {
-                subitem->setCheckState(0, Qt::Checked);
+    for (auto top_level_dataset = tree.cbegin(); top_level_dataset != tree.cend(); ++top_level_dataset) {
+        QList<QTreeWidgetItem*> matches = ui->dataset_treeWidget->findItems(top_level_dataset.key(), Qt::MatchExactly, 0);
+        const QStringList& sub_datasets = top_level_dataset.value();
+
+        if (sub_datasets.isEmpty()) {
+            for (QTreeWidgetItem* item: matches) {
+                item->setCheckState(0, Qt::Checked);
+            }
+        }
+        else {
+            for (QTreeWidgetItem* item: matches) {
+                const size_t child_count = item->childCount();
+                for (int i = 0; i < child_count; ++i) {
+                    QTreeWidgetItem* child = item->child(i);
+                    const QString child_name = child->data(0, Qt::DisplayRole).toString();
+                    if (sub_datasets.contains(child_name)) {
+                        child->setCheckState(0, Qt::Checked);
+                    }
+                }
             }
         }
     }
 
-    // load prompts
+    /******************************
+     * CORE PROMPT ADDITION LOGIC *
+     ******************************/
+
+    const QStringList datasets_to_be_added = getDatasetsToAdd(ui->dataset_treeWidget, ui->prompts_treeWidget, m_currentlySelectedDatasets);
+    const QStringList task_dirs = getHelmTaskDirs(datasets_to_be_added, m_helmDataPath);
+    Q_ASSERT_X(task_dirs.size() == datasets_to_be_added.size(), "Taks directories and selected datasets have different cardinalities", "mainwindow.cpp");
+    const QList<QPair<QList<QString>, QList<QString>>> queries = {{},{}};
+    const bool search_is_case_sensitive = false;
+    const size_t task_dirs_count = task_dirs.count();
+
+    for (size_t j = 0; j < task_dirs_count; ++j) {
+        const QString& dataset = datasets_to_be_added.at(j);
+
+        const QJsonDocument instances = getTaskInstances(task_dirs.at(j), m_helmDataPath);
+        if (instances.isEmpty()) {
+            return;
+        }
+
+        addPromptsToTree(dataset, instances, queries, search_is_case_sensitive, ui->prompts_treeWidget);
+        m_currentlySelectedDatasets.push_back(dataset);
+    }
+
+    if (ui->prompts_treeWidget->topLevelItemCount() > 0) {
+        ui->delete_pushButton->setEnabled(true);
+        ui->clear_pushButton->setEnabled(true);
+    }
+
+    /******************
+     * SELECT PROMPTS *
+     ******************/
+
+    const auto is_selected = [&](QTreeWidgetItem* item) {
+        if (!isPrompt(item)) {
+            return;
+        }
+
+        const QString dataset_base = getDatasetBase(item);
+        const QString dataset_spec = getDatasetSpec(item);
+        const QString prompt_id = getName(item);
+        QString prompt_cid;
+
+        for (const auto& tuple : selected_prompts) {
+            if (std::get<0>(tuple) == dataset_base && std::get<1>(tuple) == dataset_spec) {
+                auto pair = std::ranges::find_if(std::get<2>(tuple), [&](const QPair<QString, QString>& p) { return p.first == prompt_id; });
+                if (pair != std::get<2>(tuple).cend()) {
+                    prompt_cid = pair->second;
+                    setCID(item, prompt_cid);
+                    setSelectedStatus(item, true);
+                }
+            }
+        }
+    };
+
+    transformPromptTree(ui->prompts_treeWidget, is_selected);
 }
 
 void MainWindow::on_export_pushButton_clicked()
@@ -601,7 +687,6 @@ void MainWindow::on_export_pushButton_clicked()
 
     QJsonDocument custom_compilation;
     QJsonObject main_object;
-    QJsonObject compilation_name;
     QJsonArray dataset_array;
 
     QJsonObject helm_data_json = loadHelmDataConfig(m_helmDataJSON);
@@ -722,10 +807,16 @@ void MainWindow::on_exportOptions_pushButton_clicked()
 
 void MainWindow::on_prompts_treeWidget_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
-    if (!current || !isPrompt(current)) {
+    if (!current) {
         return;
     }
 
+    if (!isPrompt(current)) {
+        ui->delete_pushButton->setEnabled(true);
+        return;
+    }
+
+    ui->delete_pushButton->setEnabled(false);
     ui->prompt_plainTextEdit->clear();
     const QString prompt = getPrompt(current);
     ui->prompt_plainTextEdit->insertPlainText(prompt);

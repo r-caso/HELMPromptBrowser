@@ -71,6 +71,16 @@ private:
     QStack<QPair<QTreeWidgetItem*, QTreeWidgetItem*>> m_redoStack;
     bool m_DontShowEmptySearchMessage = false;
 
+    const int prompt_tree_column_count = 8;
+    const int cid_column = 0;
+    const int name_id_column = 1;
+    const int dataset_base_column = 2;
+    const int dataset_spec_column = 3;
+    const int is_prompt_column = 4;
+    const int prompt_contents_column = 5;
+    const int is_specified_column = 6;
+    const int selection_status_column = 7;
+
     void closeEvent(QCloseEvent *event) override;
     void writeSettings();
     void readSettings();

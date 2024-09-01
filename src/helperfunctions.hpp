@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <QJsonObject>
 #include <QString>
 #include <QStringList>
@@ -17,15 +19,17 @@ QJsonDocument getTaskInstances(const QString& task_dir, const QString& helm_data
 QString prettyPrint(const QJsonObject& obj, const QString& dataset);
 
 QStringList getSelectedDatasetNames(const QTreeWidget* tree);
-QStringList getFiltersFromDatasetList(const QStringList& dataset_names, const QString& os_name);
+QStringList getFiltersFromDatasetList(const QStringList& dataset_names);
 void deleteDatasetFromTree(const QString& dataset_name, QTreeWidget* tree);
 void addPromptsToTree(const QString& dataset,
                       const QJsonDocument& instances,
-                      const QList<QPair<QList<QString>, QList<QString>>>& queries,
+                      const QList<QPair<QStringList, QStringList>>& queries,
                       bool search_is_case_sensitive,
                       QTreeWidget* tree);
-QStringList getHelmTaskDirs(const QString& helm_data_path, const QStringList& filters);
+void transformPromptTree(QTreeWidget* prompt_tree, std::function<void(QTreeWidgetItem*)> transformation);
+QStringList getHelmTaskDirs(const QStringList& datasets, const QString& helm_data_path);
 QPair<QString, QString> splitDatasetName(const QString& dataset);
+QStringList getDatasetsToAdd(QTreeWidget* source, QTreeWidget* destination, QStringList& previous_selection);
 
 QString getCID(const QTreeWidgetItem* item);
 void setCID(QTreeWidgetItem* item, const QString& cid);

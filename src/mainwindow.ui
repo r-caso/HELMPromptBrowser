@@ -454,13 +454,13 @@
                 </size>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delete (Del; x)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delete dataset(Del; x)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="statusTip">
-                <string>Delete item from prompt tree (shortcuts: Del, x)</string>
+                <string>Delete dataset from prompt tree (shortcuts: Del, x)</string>
                </property>
                <property name="whatsThis">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Delete item from prompt tree&lt;/span&gt; (shortcuts: Del, x)&lt;/p&gt;&lt;p&gt;Unlike deselect, this action will remove the selected prompt from the prompt tree, making it unaccessible for selection and export.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Delete dataset from prompt tree&lt;/span&gt; (shortcuts: Del, x)&lt;/p&gt;&lt;p&gt;This action will remove the selected dataset from the prompt tree.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string/>
@@ -494,10 +494,10 @@
                 </size>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Undo (Ctrl-Z; u)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Undo deletion (Ctrl-Z; u)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="statusTip">
-                <string>Undo last deletion (shortcuts: Ctrl+Z; u)</string>
+                <string>Undo last dataset deletion (shortcuts: Ctrl+Z; u)</string>
                </property>
                <property name="text">
                 <string/>
@@ -531,10 +531,10 @@
                 </size>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Redo (Ctrl-Shift-Z; Ctrl-Y; y)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Redo deletion (Ctrl-Shift-Z; Ctrl-Y; y)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="statusTip">
-                <string>Redo last deletion (Ctrl+Shift+Z; Ctrl+Y; y)</string>
+                <string>Redo last dataset deletion (Ctrl+Shift+Z; Ctrl+Y; y)</string>
                </property>
                <property name="text">
                 <string/>
@@ -668,8 +668,11 @@
            </item>
            <item row="0" column="2">
             <widget class="QLineEdit" name="search_lineEdit">
+             <property name="readOnly">
+              <bool>false</bool>
+             </property>
              <property name="placeholderText">
-              <string>left of OR right of AND (earlier OR later)</string>
+              <string>left OR &quot;right of&quot; AND NOT (earlier OR later)</string>
              </property>
             </widget>
            </item>
@@ -744,7 +747,7 @@
      <x>0</x>
      <y>0</y>
      <width>1052</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

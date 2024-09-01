@@ -1,6 +1,7 @@
 #include "helperfunctions.hpp"
 
 #include <QCheckBox>
+#include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
@@ -8,6 +9,7 @@
 #include <QList>
 #include <QMessageBox>
 #include <QString>
+#include <QSysInfo>
 #include <QTimer>
 #include <QTreeWidgetItem>
 
@@ -21,7 +23,7 @@ int Ask(const QString& text, const QString& informative_text, bool& dont_show_ag
     cb->setCheckState(Qt::Unchecked);
     cb->setText("Don't show this again");
     msg.setCheckBox(cb);
-    int result = msg.exec();
+    const int result = msg.exec();
     dont_show_again = cb->checkState();
     return result;
 }
@@ -70,7 +72,7 @@ QString prettyPrint(const QJsonObject& obj, const QString& dataset)
     QString perturbed;
 
     if (obj.contains("perturbation")) {
-        subsplit += "PERTURBATION: prompt is perturbed";
+        perturbed += "PERTURBATION: prompt is perturbed";
     }
 
     QString str = "DATASET: " + dataset + "\n" +
@@ -122,11 +124,12 @@ QStringList getSelectedDatasetNames(const QTreeWidget* tree)
     return selected_datasets;
 }
 
-QStringList getFiltersFromDatasetList(const QStringList& dataset_names, const QString& os_name)
+QStringList getFiltersFromDatasetList(const QStringList& dataset_names)
 {
+    const QString operating_system = QSysInfo::productType();
     QStringList filters;
     for (QString dataset : dataset_names) {
-        filters.push_back(os_name == "windows" ? dataset.replace(":", "_") + "*" : dataset + "*");
+        filters.push_back(operating_system == "windows" ? dataset.replace(":", "_") + "*" : dataset + "*");
     }
     return filters;
 }
@@ -160,8 +163,10 @@ void deleteDatasetFromTree(const QString& dataset_name, QTreeWidget* tree)
     }
 }
 
-QStringList getHelmTaskDirs(const QString& helm_data_path, const QStringList& filters)
+QStringList getHelmTaskDirs(const QStringList& datasets, const QString& helm_data_path)
 {
+    const QStringList filters = getFiltersFromDatasetList(datasets);
+
     QStringList task_dirs;
 
     QDir helm_dir(helm_data_path);
@@ -206,9 +211,6 @@ QString getDatasetSpec(const QTreeWidgetItem* item)
 
 bool isPrompt(const QTreeWidgetItem* item)
 {
-    if (item->columnCount() < 7) {
-        return false;
-    }
     return item->data(4, Qt::DisplayRole).toBool();
 }
 
@@ -219,9 +221,6 @@ QString getPrompt(const QTreeWidgetItem* item)
 
 bool hasSpecifications(const QTreeWidgetItem* item)
 {
-    if (item->columnCount() < 8) {
-        return false;
-    }
     return item->data(6, Qt::DisplayRole).toBool();
 }
 
@@ -341,12 +340,11 @@ QPair<QString, QString> splitDatasetName(const QString& dataset)
 
 void addPromptsToTree(const QString& dataset,
                       const QJsonDocument& instances,
-                      const QList<QPair<QList<QString>, QList<QString>>>& queries,
+                      const QList<QPair<QStringList, QStringList>>& queries,
                       bool search_is_case_sensitive,
                       QTreeWidget* tree)
 {
     auto [dataset_base, dataset_spec] = splitDatasetName(dataset);
-
     QList<QTreeWidgetItem*> base_item_match = tree->findItems(dataset_base, Qt::MatchExactly, 1);
     QList<QTreeWidgetItem*> spec_item_match;
 
@@ -378,10 +376,10 @@ void addPromptsToTree(const QString& dataset,
         }
         else {
             spec_item = new QTreeWidgetItem();
+            spec_item->setData(1, Qt::DisplayRole, dataset_spec);
+            spec_item->setData(4, Qt::DisplayRole, false);
+            spec_item->setData(6, Qt::DisplayRole, false);
         }
-        spec_item->setData(1, Qt::DisplayRole, dataset_spec);
-        spec_item->setData(4, Qt::DisplayRole, false);
-        spec_item->setData(6, Qt::DisplayRole, false);
     }
 
     QTreeWidgetItem* parent = spec_item != nullptr ? spec_item : base_item;
@@ -445,4 +443,53 @@ void PopUp(const QString& message)
     msgBox.setStandardButtons(QMessageBox::NoButton);
     QTimer::singleShot(1250, &msgBox, &QMessageBox::accept);
     msgBox.exec();
+}
+
+QStringList getDatasetsToAdd(QTreeWidget* source, QTreeWidget* destination, QStringList& previous_selection)
+{
+    QStringList selected_datasets = getSelectedDatasetNames(source);
+
+    QStringList to_be_unregistered;
+    for (const QString& current_dataset : previous_selection) {
+        if (!selected_datasets.contains(current_dataset)) {
+            deleteDatasetFromTree(current_dataset, destination);
+            to_be_unregistered.push_back(current_dataset);
+        }
+    }
+    for (const QString& dataset : to_be_unregistered) {
+        previous_selection.removeAll(dataset);
+    }
+
+    QStringList datasets_to_be_added;
+    std::ranges::copy_if(selected_datasets, std::back_inserter(datasets_to_be_added),
+                         [&](const QString& dataset) -> bool { return !previous_selection.contains(dataset); });
+
+    return datasets_to_be_added;
+}
+
+
+void transformPromptTree(QTreeWidget* prompt_tree, std::function<void(QTreeWidgetItem*)> transformation)
+{
+    const size_t dataset_count = prompt_tree->topLevelItemCount();
+    for (size_t i = 0; i < dataset_count; ++i) {
+        QTreeWidgetItem* dataset = prompt_tree->topLevelItem(i);
+        if (!hasSpecifications(dataset)) {
+            const size_t prompt_count = dataset->childCount();
+            for (size_t j = 0; j < prompt_count; ++j) {
+                QTreeWidgetItem* prompt = dataset->child(j);
+                transformation(prompt);
+            }
+        }
+        else {
+            const size_t subdataset_count = dataset->childCount();
+            for (size_t j = 0; j < subdataset_count; ++j) {
+                QTreeWidgetItem* subdataset = dataset->child(j);
+                const size_t prompt_count = subdataset->childCount();
+                for (size_t k = 0; k < prompt_count; ++k) {
+                    QTreeWidgetItem* prompt = subdataset->child(k);
+                    transformation(prompt);
+                }
+            }
+        }
+    }
 }
