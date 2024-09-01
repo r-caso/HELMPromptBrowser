@@ -58,6 +58,8 @@ private slots:
 
     void on_deselectPrompt_pushButton_clicked();
 
+    void on_filterByNumber_FilterModels_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QString m_helmDataPath;

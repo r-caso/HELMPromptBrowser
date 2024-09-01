@@ -124,7 +124,7 @@
              <item>
               <widget class="QCheckBox" name="filterByNumber_checkBox">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="text">
                 <string>Filter by number of tested models</string>
@@ -144,9 +144,21 @@
                 </widget>
                </item>
                <item>
-                <widget class="QComboBox" name="filterByNumber_comboBox">
+                <widget class="QSpinBox" name="filterByNumber_modelNumber_spinBox">
                  <property name="enabled">
                   <bool>false</bool>
+                 </property>
+                 <property name="minimum">
+                  <number>0</number>
+                 </property>
+                 <property name="maximum">
+                  <number>69</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>10</number>
+                 </property>
+                 <property name="value">
+                  <number>30</number>
                  </property>
                 </widget>
                </item>
@@ -156,24 +168,21 @@
                   <bool>false</bool>
                  </property>
                  <property name="text">
-                  <string>models or more</string>
+                  <string>or more</string>
                  </property>
                 </widget>
                </item>
-               <item>
-                <spacer name="horizontalSpacer_3">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
               </layout>
+             </item>
+             <item>
+              <widget class="QPushButton" name="filterByNumber_FilterModels_pushButton">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Filter models</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>

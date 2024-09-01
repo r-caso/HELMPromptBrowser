@@ -27,6 +27,7 @@ void addPromptsToTree(const QString& dataset,
                       bool search_is_case_sensitive,
                       QTreeWidget* tree);
 void transformPromptTree(QTreeWidget* prompt_tree, std::function<void(QTreeWidgetItem*)> transformation);
+void transformDatasetTree(QTreeWidget* prompt_tree, std::function<void(QTreeWidgetItem*)> transformation);
 QStringList getHelmTaskDirs(const QStringList& datasets, const QString& helm_data_path);
 QPair<QString, QString> splitDatasetName(const QString& dataset);
 QStringList getDatasetsToAdd(QTreeWidget* source, QTreeWidget* destination, QStringList& previous_selection);

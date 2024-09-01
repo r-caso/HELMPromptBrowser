@@ -20,7 +20,6 @@
 #include <QStandardPaths>
 #include <QString>
 #include <QStringList>
-#include <QWidgetItem>
 #include <QTreeWidgetItem>
 
 #include "exportoptionsdialog.hpp"
@@ -50,292 +49,320 @@ MainWindow::MainWindow(QWidget *parent)
     ui->prompts_treeWidget->header()->setStretchLastSection(true);
     ui->prompts_treeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    const std::map<QString, QStringList> HELM_hierarchy = {
+    const std::map<QString, QList<QPair<QString, int>>> HELM_hierarchy = {
         {
-            "babi_qa", {
-                "babi_qa:task=15",
-                "babi_qa:task=19",
-                "babi_qa:task=3",
-                "babi_qa:task=all",
-            }
+            "babi_qa", QList({
+                std::make_pair(QString("babi_qa:task=15"), 69),
+                std::make_pair(QString("babi_qa:task=19"), 69),
+                std::make_pair(QString("babi_qa:task=3"),  69),
+                std::make_pair(QString("babi_qa:task=all"), 69),
+            })
         },
         {
-            "bbq", {
-                "bbq:subject=all,method=multiple_choice_joint",
-                "bbq:subject=all,method=multiple_choice_separate_calibrated",
-                "bbq:subject=all,method=multiple_choice_separate_original",
-            }
+            "bbq", QList({
+                std::make_pair(QString("bbq:subject=all,method=multiple_choice_joint"), 42),
+                std::make_pair(QString("bbq:subject=all,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("bbq:subject=all,method=multiple_choice_separate_original"), 6),
+            })
         },
         {
-            "blimp", {
-                "blimp:phenomenon=binding,method=multiple_choice_joint",
-                "blimp:phenomenon=binding,method=multiple_choice_separate_calibrated",
-                "blimp:phenomenon=binding,method=multiple_choice_separate_original",
-                "blimp:phenomenon=irregular_forms,method=multiple_choice_joint",
-                "blimp:phenomenon=irregular_forms,method=multiple_choice_separate_calibrated",
-                "blimp:phenomenon=irregular_forms,method=multiple_choice_separate_original",
-                "blimp:phenomenon=island_effects,method=multiple_choice_joint",
-                "blimp:phenomenon=island_effects,method=multiple_choice_separate_calibrated",
-                "blimp:phenomenon=island_effects,method=multiple_choice_separate_original",
-                "blimp:phenomenon=quantifiers,method=multiple_choice_joint",
-                "blimp:phenomenon=quantifiers,method=multiple_choice_separate_calibrated",
-                "blimp:phenomenon=quantifiers,method=multiple_choice_separate_original",
-            }
+            "blimp", QList({
+                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_joint"),6),
+                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_separate_original"), 32),
+                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_joint"),6),
+                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_original"),32),
+                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_joint"),6),
+                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_separate_original"), 32),
+                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_joint"),6),
+                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_separate_original"), 32),
+            })
         },
         {
-            "bold:subject=all", {}
+            "bold:subject=all", QList({
+                std::make_pair(QString(""), 42)
+            })
         },
         {
-            "boolq", {}
+            "boolq", QList({
+                std::make_pair(QString(""), 66)
+            })
         },
         {
-            "boolq:only_contrast=True", {}
+            "boolq:only_contrast=True", QList({
+                std::make_pair(QString(""), 42)
+            })
         },
         {
-            "civil_comments", {
-                "civil_comments:demographic=LGBTQ",
-                "civil_comments:demographic=all",
-                "civil_comments:demographic=black",
-                "civil_comments:demographic=christian",
-                "civil_comments:demographic=female",
-                "civil_comments:demographic=male",
-                "civil_comments:demographic=muslim",
-                "civil_comments:demographic=other_religions",
-                "civil_comments:demographic=white",
-            }
+            "civil_comments", QList({
+                std::make_pair(QString("civil_comments:demographic=LGBTQ"), 66),
+                std::make_pair(QString("civil_comments:demographic=all"), 66),
+                std::make_pair(QString("civil_comments:demographic=black"), 66),
+                std::make_pair(QString("civil_comments:demographic=christian"),66),
+                std::make_pair(QString("civil_comments:demographic=female"), 66),
+                std::make_pair(QString("civil_comments:demographic=male"), 66),
+                std::make_pair(QString("civil_comments:demographic=muslim"), 66),
+                std::make_pair(QString("civil_comments:demographic=other_religions"),66),
+                std::make_pair(QString("civil_comments:demographic=white"),66),
+            })
         },
         {
-            "code", {
-                "code:dataset=apps",
-                "code:dataset=humaneval",
-            }
+            "code", QList({
+                std::make_pair(QString("code:dataset=apps"), 2),
+                std::make_pair(QString("code:dataset=humaneval"), 2)
+            })
         },
         {
-            "commonsense", {
-                "commonsense:dataset=hellaswag,method=multiple_choice_joint",
-                "commonsense:dataset=hellaswag,method=multiple_choice_separate_calibrated",
-                "commonsense:dataset=hellaswag,method=multiple_choice_separate_original",
-                "commonsense:dataset=openbookqa,method=multiple_choice_joint",
-                "commonsense:dataset=openbookqa,method=multiple_choice_separate_calibrated",
-                "commonsense:dataset=openbookqa,method=multiple_choice_separate_original",
-            }
+            "commonsense", QList({
+                std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_joint"), 6),
+                std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_separate_calibrated"),  6),
+                std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_separate_original"), 32),
+                std::make_pair(QString("commonsense:dataset=openbookqa,method=multiple_choice_joint"), 6),
+                std::make_pair(QString("commonsense:dataset=openbookqa,method=multiple_choice_separate_calibrated"), 32),
+                std::make_pair(QString("commonsense:dataset=openbookqa,method=multiple_choice_separate_original"), 6),
+            })
         },
         {
-            "copyright", {
-                "copyright:datatag=n_books_1000-extractions_per_book_1-prefix_length_125",
-                "copyright:datatag=oh_the_places",
-                "copyright:datatag=popular_books-prefix_length_125.json",
-                "copyright:datatag=prompt_num_line_1-min_lines_20.json",
-                "copyright:datatag=prompt_num_line_10-min_lines_20.json",
-            }
+            "copyright", QList({
+                std::make_pair(QString("copyright:datatag=n_books_1000-extractions_per_book_1-prefix_length_125"), 42),
+                std::make_pair(QString("copyright:datatag=oh_the_places"), 10),
+                std::make_pair(QString("copyright:datatag=popular_books-prefix_length_125.json"), 42),
+                std::make_pair(QString("copyright:datatag=prompt_num_line_1-min_lines_20.json"), 2),
+                std::make_pair(QString("copyright:datatag=prompt_num_line_10-min_lines_20.json"),2),
+            })
         },
         {
-            "disinfo", {
-                "disinfo:type=reiteration,topic=climate",
-                "disinfo:type=reiteration,topic=covid",
-                "disinfo:type=wedging",
-            }
+            "disinfo", QList({
+                std::make_pair(QString("disinfo:type=reiteration,topic=climate"), 42),
+                std::make_pair(QString("disinfo:type=reiteration,topic=covid"), 42),
+                std::make_pair(QString("disinfo:type=wedging"), 42),
+            })
         },
         {
-            "dyck_language_np=3", {}
+            "dyck_language_np=3", QList({
+                std::make_pair(QString(""), 68)
+            })
         },
         {
-            "entity_data_imputation", {
-                "entity_data_imputation:dataset=Buy",
-                "entity_data_imputation:dataset=Restaurant",
-            }
+            "entity_data_imputation", QList({
+                std::make_pair(QString("entity_data_imputation:dataset=Buy"), 66),
+                std::make_pair(QString("entity_data_imputation:dataset=Restaurant"), 66),
+            })
         },
         {
-            "entity_matching", {
-                "entity_matching:dataset=Abt_Buy",
-                "entity_matching:dataset=Beer",
-                "entity_matching:dataset=Dirty_iTunes_Amazon",
-            }
+            "entity_matching", QList({
+                std::make_pair(QString("entity_matching:dataset=Abt_Buy"), 66),
+                std::make_pair(QString("entity_matching:dataset=Beer"), 66),
+                std::make_pair(QString("entity_matching:dataset=Dirty_iTunes_Amazon"), 66),
+            })
         },
         {
-            "gsm", {}
+            "gsm", QList({
+                std::make_pair(QString(""), 68)
+            })
         },
         {
-            "ice", {
-                "ice:gender=female",
-                "ice:gender=male",
-                "ice:subset=ea",
-                "ice:subset=hk",
-                "ice:subset=ind",
-                "ice:subset=usa",
-            }
+            "ice", QList({
+                std::make_pair(QString("ice:gender=female"),32),
+                std::make_pair(QString("ice:gender=male"),32),
+                std::make_pair(QString("ice:subset=ea"),32),
+                std::make_pair(QString("ice:subset=hk"),32),
+                std::make_pair(QString("ice:subset=ind"),32),
+                std::make_pair(QString("ice:subset=usa"),32),
+            })
         },
         {
-            "imdb", {}
+            "imdb", QList({
+                std::make_pair(QString(""), 66)
+            })
         },
         {
-            "imdb:only_contrast=True", {}
+            "imdb:only_contrast=True", QList({
+                std::make_pair(QString(""),42)
+            })
         },
         {
-            "legal_support", {
-                "legal_support,method=multiple_choice_joint",
-                "legal_support,method=multiple_choice_separate_calibrated",
-                "legal_support,method=multiple_choice_separate_original",
-            }
+            "legal_support", QList({
+                std::make_pair(QString("legal_support,method=multiple_choice_joint"), 68),
+                std::make_pair(QString("legal_support,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("legal_support,method=multiple_choice_separate_original"),6),
+            })
         },
         {
-            "lsat_qa", {
-                "lsat_qa:task=all,method=multiple_choice_joint",
-                "lsat_qa:task=all,method=multiple_choice_separate_calibrated",
-                "lsat_qa:task=all,method=multiple_choice_separate_original",
-            }
+            "lsat_qa", QList({
+                std::make_pair(QString("lsat_qa:task=all,method=multiple_choice_joint"), 68),
+                std::make_pair(QString("lsat_qa:task=all,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("lsat_qa:task=all,method=multiple_choice_separate_original"), 6),
+            })
         },
         {
-            "math", {
-                "math:subject=algebra,level=1,use_official_examples=False,use_chain_of_thought=True",
-                "math:subject=algebra,level=1,use_official_examples=True,use_chain_of_thought=False",
-                "math:subject=counting_and_probability,level=1,use_official_examples=False,use_chain_of_thought=True",
-                "math:subject=counting_and_probability,level=1,use_official_examples=True,use_chain_of_thought=False",
-                "math:subject=geometry,level=1,use_official_examples=False,use_chain_of_thought=True",
-                "math:subject=geometry,level=1,use_official_examples=True,use_chain_of_thought=False",
-                "math:subject=intermediate_algebra,level=1,use_official_examples=False,use_chain_of_thought=True",
-                "math:subject=intermediate_algebra,level=1,use_official_examples=True,use_chain_of_thought=False",
-                "math:subject=number_theory,level=1,use_official_examples=False,use_chain_of_thought=True",
-                "math:subject=number_theory,level=1,use_official_examples=True,use_chain_of_thought=False",
-                "math:subject=prealgebra,level=1,use_official_examples=False,use_chain_of_thought=True",
-                "math:subject=prealgebra,level=1,use_official_examples=True,use_chain_of_thought=False",
-                "math:subject=precalculus,level=1,use_official_examples=False,use_chain_of_thought=True",
-                "math:subject=precalculus,level=1,use_official_examples=True,use_chain_of_thought=False",
-            }
+            "math", QList({
+                std::make_pair(QString("math:subject=algebra,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
+                std::make_pair(QString("math:subject=algebra,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
+                std::make_pair(QString("math:subject=counting_and_probability,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
+                std::make_pair(QString("math:subject=counting_and_probability,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
+                std::make_pair(QString("math:subject=geometry,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
+                std::make_pair(QString("math:subject=geometry,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
+                std::make_pair(QString("math:subject=intermediate_algebra,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
+                std::make_pair(QString("math:subject=intermediate_algebra,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
+                std::make_pair(QString("math:subject=number_theory,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
+                std::make_pair(QString("math:subject=number_theory,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
+                std::make_pair(QString("math:subject=prealgebra,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
+                std::make_pair(QString("math:subject=prealgebra,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
+                std::make_pair(QString("math:subject=precalculus,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
+                std::make_pair(QString("math:subject=precalculus,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
+            })
         },
         {
-            "mmlu", {
-                "mmlu:subject=abstract_algebra,method=multiple_choice_joint",
-                "mmlu:subject=abstract_algebra,method=multiple_choice_separate_calibrated",
-                "mmlu:subject=abstract_algebra,method=multiple_choice_separate_original",
-                "mmlu:subject=college_chemistry,method=multiple_choice_joint",
-                "mmlu:subject=college_chemistry,method=multiple_choice_separate_calibrated",
-                "mmlu:subject=college_chemistry,method=multiple_choice_separate_original",
-                "mmlu:subject=computer_security,method=multiple_choice_joint",
-                "mmlu:subject=computer_security,method=multiple_choice_separate_calibrated",
-                "mmlu:subject=computer_security,method=multiple_choice_separate_original",
-                "mmlu:subject=econometrics,method=multiple_choice_joint",
-                "mmlu:subject=econometrics,method=multiple_choice_separate_calibrated",
-                "mmlu:subject=econometrics,method=multiple_choice_separate_original",
-                "mmlu:subject=us_foreign_policy,method=multiple_choice_joint",
-                "mmlu:subject=us_foreign_policy,method=multiple_choice_separate_calibrated",
-                "mmlu:subject=us_foreign_policy,method=multiple_choice_separate_original",
-            }
+            "mmlu", QList({
+                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_joint"),66),
+                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_original"),6),
+                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_joint"),66),
+                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_original"),6),
+                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_joint"),66),
+                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_separate_original"),6),
+                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_joint"),66),
+                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_separate_original"),6),
+                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_joint"),66),
+                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_original"),6),
+            })
         },
         {
-            "msmarco", {
-                "msmarco:track=regular,valid_topk=30",
-                "msmarco:track=trec,valid_topk=30",
-            }
+            "msmarco", QList({
+                std::make_pair(QString("msmarco:track=regular,valid_topk=30"),32),
+                std::make_pair(QString("msmarco:track=trec,valid_topk=30"),32),
+            })
         },
         {
-            "narrative_qa", {}
+            "narrative_qa", QList({
+                std::make_pair(QString(""), 65)
+            })
         },
         {
-            "natural_qa", {
-                "natural_qa:mode=closedbook",
-                "natural_qa:mode=openbook_longans",
-            }
+            "natural_qa", QList({
+                std::make_pair(QString("natural_qa:mode=closedbook"), 66),
+                std::make_pair(QString("natural_qa:mode=openbook_longans"), 65),
+            })
         },
         {
-            "quac", {}
+            "quac", QList({
+                std::make_pair(QString(""), 65)
+            })
         },
         {
-            "raft", {
-                "raft:subset=ade_corpus_v2",
-                "raft:subset=banking_77",
-                "raft:subset=neurips_impact_statement_risks",
-                "raft:subset=one_stop_english",
-                "raft:subset=overruling",
-                "raft:subset=semiconductor_org_types",
-                "raft:subset=systematic_review_inclusion",
-                "raft:subset=tai_safety_research",
-                "raft:subset=terms_of_service",
-                "raft:subset=tweet_eval_hate",
-                "raft:subset=twitter_complaints",
-            }
+            "raft", QList({
+                std::make_pair(QString("raft:subset=ade_corpus_v2"),66),
+                std::make_pair(QString("raft:subset=banking_77"),66),
+                std::make_pair(QString("raft:subset=neurips_impact_statement_risks"),66),
+                std::make_pair(QString("raft:subset=one_stop_english"),66),
+                std::make_pair(QString("raft:subset=overruling"),66),
+                std::make_pair(QString("raft:subset=semiconductor_org_types"),66),
+                std::make_pair(QString("raft:subset=systematic_review_inclusion"),66),
+                std::make_pair(QString("raft:subset=tai_safety_research"),66),
+                std::make_pair(QString("raft:subset=terms_of_service"),66),
+                std::make_pair(QString("raft:subset=tweet_eval_hate"),66),
+                std::make_pair(QString("raft:subset=twitter_complaints"),66),
+            })
         },
         {
-            "real_toxicity_prompts", {}
+            "real_toxicity_prompts", QList({
+                std::make_pair(QString(""), 42)
+            })
         },
         {
-            "summarization_cnndm", {
-                "summarization_cnndm:temperature=0.3,device=cpu",
-                "summarization_cnndm:temperature=0.3,device=cuda",
-            }
+            "summarization_cnndm", QList({
+                std::make_pair(QString("summarization_cnndm:temperature=0.3,device=cpu"), 42),
+                std::make_pair(QString("summarization_cnndm:temperature=0.3,device=cuda"), 40),
+            })
         },
         {
-            "summarization_xsum", {
-                "summarization_xsum:temperature=0.3,device=cpu",
-                "summarization_xsum:temperature=0.3,device=cuda",
-            }
+            "summarization_xsum", QList({
+                std::make_pair(QString("summarization_xsum:temperature=0.3,device=cpu"), 42),
+                std::make_pair(QString("summarization_xsum:temperature=0.3,device=cuda"), 40),
+            })
         },
         {
-            "synthetic_efficiency:random=None", {}
+            "synthetic_efficiency:random=None", QList({
+                std::make_pair(QString(""), 39)
+            })
         },
         {
-            "synthetic_reasoning", {
-                "synthetic_reasoning:mode=induction",
-                "synthetic_reasoning:mode=pattern_match",
-                "synthetic_reasoning:mode=variable_substitution",
-            }
+            "synthetic_reasoning", QList({
+                std::make_pair(QString("synthetic_reasoning:mode=induction"),68),
+                std::make_pair(QString("synthetic_reasoning:mode=pattern_match"),68),
+                std::make_pair(QString("synthetic_reasoning:mode=variable_substitution"),68),
+            })
         },
         {
-            "synthetic_reasoning_natural", {
-                "synthetic_reasoning_natural:difficulty=easy",
-                "synthetic_reasoning_natural:difficulty=hard",
-            }
+            "synthetic_reasoning_natural", QList({
+                std::make_pair(QString("synthetic_reasoning_natural:difficulty=easy"),68),
+                std::make_pair(QString("synthetic_reasoning_natural:difficulty=hard"),68),
+            })
         },
         {
-            "the_pile", {
-                "the_pile:subset=ArXiv",
-                "the_pile:subset=BookCorpus2",
-                "the_pile:subset=Enron Emails",
-                "the_pile:subset=Github",
-                "the_pile:subset=PubMed Central",
-                "the_pile:subset=Wikipedia (en)",
-            }
+            "the_pile", QList({
+                std::make_pair(QString("the_pile:subset=ArXiv"),24),
+                std::make_pair(QString("the_pile:subset=BookCorpus2"),32),
+                std::make_pair(QString("the_pile:subset=Enron Emails"),32),
+                std::make_pair(QString("the_pile:subset=Github"),24),
+                std::make_pair(QString("the_pile:subset=PubMed Central"),24),
+                std::make_pair(QString("the_pile:subset=Wikipedia (en)"),32),
+            })
         },
         {
-            "truthful_qa", {
-                "truthful_qa:task=mc_single,method=multiple_choice_joint",
-                "truthful_qa:task=mc_single,method=multiple_choice_separate_calibrated",
-                "truthful_qa:task=mc_single,method=multiple_choice_separate_original",
-            }
+            "truthful_qa", QList({
+                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_joint"),66),
+                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_original"),6),
+            })
         },
         {
-            "twitter_aae", {
-                "twitter_aae:demographic=aa",
-                "twitter_aae:demographic=white",
-            }
+            "twitter_aae", QList({
+                std::make_pair(QString("twitter_aae:demographic=aa"),32),
+                std::make_pair(QString("twitter_aae:demographic=white"),32),
+            })
         },
         {
-            "wikifact", {
-                "wikifact:k=5,subject=author",
-                "wikifact:k=5,subject=currency",
-                "wikifact:k=5,subject=discoverer_or_inventor",
-                "wikifact:k=5,subject=instance_of",
-                "wikifact:k=5,subject=medical_condition_treated",
-                "wikifact:k=5,subject=part_of",
-                "wikifact:k=5,subject=place_of_birth",
-                "wikifact:k=5,subject=plaintiff",
-                "wikifact:k=5,subject=position_held",
-                "wikifact:k=5,subject=symptoms_and_signs",
-            }
+            "wikifact", QList({
+                std::make_pair(QString("wikifact:k=5,subject=author"),66),
+                std::make_pair(QString("wikifact:k=5,subject=currency"),66),
+                std::make_pair(QString("wikifact:k=5,subject=discoverer_or_inventor"),66),
+                std::make_pair(QString("wikifact:k=5,subject=instance_of"),66),
+                std::make_pair(QString("wikifact:k=5,subject=medical_condition_treated"),66),
+                std::make_pair(QString("wikifact:k=5,subject=part_of"),65),
+                std::make_pair(QString("wikifact:k=5,subject=place_of_birth"),66),
+                std::make_pair(QString("wikifact:k=5,subject=plaintiff"),66),
+                std::make_pair(QString("wikifact:k=5,subject=position_held"),66),
+                std::make_pair(QString("wikifact:k=5,subject=symptoms_and_signs"),66),
+            })
         }
     };
 
-    ui->dataset_treeWidget->setColumnCount(1);
+    ui->dataset_treeWidget->setColumnCount(2);
+    ui->dataset_treeWidget->hideColumn(1);
 
-    for (const auto& [task, sub_tasks] : HELM_hierarchy) {
+    for (const auto& [task, sub_task_number_of_models] : HELM_hierarchy) {
         QTreeWidgetItem* item = new QTreeWidgetItem();
         item->setCheckState(0, Qt::Unchecked);
         item->setFlags(item->flags() | Qt::ItemIsAutoTristate);
         item->setData(0, Qt::DisplayRole, task);
-        for (const auto& sub_task : sub_tasks) {
+        for (const auto& [sub_task, number_of_models]  : sub_task_number_of_models) {
+            if (sub_task.isEmpty()) {
+                item->setData(1, Qt::DisplayRole, number_of_models);
+                continue;
+            }
             QTreeWidgetItem* child = new QTreeWidgetItem();
             child->setCheckState(0, Qt::Unchecked);
             child->setData(0, Qt::DisplayRole, sub_task);
+            child->setData(1, Qt::DisplayRole, number_of_models);
             item->addChild(child);
         }
         ui->dataset_treeWidget->addTopLevelItem(item);
@@ -446,14 +473,29 @@ void MainWindow::on_search_pushButton_clicked()
 void MainWindow::on_filterByNumber_checkBox_checkStateChanged(const Qt::CheckState &arg1)
 {
     if (arg1 == Qt::Checked) {
-        ui->filterByNumber_comboBox->setEnabled(true);
+        ui->filterByNumber_modelNumber_spinBox->setEnabled(true);
         ui->filterByNumber_label1->setEnabled(true);
         ui->filterByNumber_label2->setEnabled(true);
+        ui->filterByNumber_FilterModels_pushButton->setEnabled(true);
     }
     else if (arg1 == Qt::Unchecked) {
-        ui->filterByNumber_comboBox->setEnabled(false);
+        ui->filterByNumber_modelNumber_spinBox->setEnabled(false);
         ui->filterByNumber_label1->setEnabled(false);
         ui->filterByNumber_label2->setEnabled(false);
+        ui->filterByNumber_FilterModels_pushButton->setEnabled(false);
+
+        const auto enable_all_datasets = [&](QTreeWidgetItem* item) -> void {
+            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+            item->setBackground(0, Qt::NoBrush);
+
+            if (item->parent() != nullptr) {
+                QTreeWidgetItem* parent = item->parent();
+                parent->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+                parent->setBackground(0, Qt::NoBrush);
+            }
+        };
+
+        transformDatasetTree(ui->dataset_treeWidget, enable_all_datasets);
     }
 }
 
@@ -867,3 +909,44 @@ void MainWindow::readSettings()
     m_importFileFolder = settings.value("IMPORT_JSON_FOLDER").toString();
     m_DontShowEmptySearchMessage = settings.value("DontShowAgain").toBool();
 }
+
+void MainWindow::on_filterByNumber_FilterModels_pushButton_clicked()
+{
+    const int number_of_models = ui->filterByNumber_modelNumber_spinBox->value();
+
+    const auto disable_datasets_by_number_of_models = [&](QTreeWidgetItem* item) -> void {
+        if (item->data(1, Qt::DisplayRole).toInt() < number_of_models) {
+            item->setFlags(item->flags() & (~Qt::ItemIsUserCheckable));
+            item->setBackground(0, Qt::lightGray);
+            item->setCheckState(0, Qt::Unchecked);
+
+            if (item->parent() != nullptr) {
+                QTreeWidgetItem* parent = item->parent();
+                const size_t child_count = parent->childCount();
+                bool all_children_disabled = true;
+                for (size_t i = 0; i < child_count; ++i) {
+                    if (parent->child(i)->flags() & Qt::ItemIsUserCheckable) {
+                        all_children_disabled = false;
+                    }
+                }
+                if (all_children_disabled) {
+                    parent->setFlags(parent->flags() & (~Qt::ItemIsUserCheckable));
+                    parent->setBackground(0, Qt::lightGray);
+                    parent->setCheckState(0, Qt::Unchecked);
+                }
+            }
+        }
+        else {
+            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+            item->setBackground(0, Qt::NoBrush);
+            if (item->parent() != nullptr) {
+                QTreeWidgetItem* parent = item->parent();
+                parent->setFlags(parent->flags() | Qt::ItemIsUserCheckable);
+                parent->setBackground(0, Qt::NoBrush);
+            }
+        }
+    };
+
+    transformDatasetTree(ui->dataset_treeWidget, disable_datasets_by_number_of_models);
+}
+
