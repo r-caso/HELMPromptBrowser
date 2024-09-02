@@ -491,6 +491,9 @@ void MainWindow::on_filterByNumber_checkBox_checkStateChanged(const Qt::CheckSta
         ui->filterByNumber_FilterModels_pushButton->setEnabled(false);
 
         const auto enable_all_datasets = [&](QTreeWidgetItem* item) -> void {
+            if (item == nullptr) {
+                return;
+            }
             item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
             item->setBackground(0, Qt::NoBrush);
 
@@ -675,6 +678,9 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
      ******************/
 
     const auto is_selected = [&](QTreeWidgetItem* item) {
+        if (item == nullptr) {
+            return;
+        }
         if (!isPrompt(item)) {
             return;
         }
@@ -921,6 +927,9 @@ void MainWindow::on_filterByNumber_FilterModels_pushButton_clicked()
     const int number_of_models = ui->filterByNumber_modelNumber_spinBox->value();
 
     const auto disable_datasets_by_number_of_models = [&](QTreeWidgetItem* item) -> void {
+        if (item == nullptr) {
+            return;
+        }
         if (item->data(1, Qt::DisplayRole).toInt() < number_of_models) {
             item->setFlags(item->flags() & (~Qt::ItemIsUserCheckable));
             item->setBackground(0, Qt::lightGray);
@@ -1008,6 +1017,9 @@ void MainWindow::on_filter_pushButton_clicked()
      ***************************/
 
     const auto filter_prompt = [&](QTreeWidgetItem* item) -> void {
+        if (item == nullptr) {
+            return;
+        }
         const QString& prompt = getPrompt(item);
         if (matches(prompt, queries, filter_is_case_sensitive)) {
             QTreeWidgetItem* parent = item->parent();

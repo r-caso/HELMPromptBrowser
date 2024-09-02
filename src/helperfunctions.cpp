@@ -1,7 +1,6 @@
 #include "helperfunctions.hpp"
 
 #include <QCheckBox>
-#include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
@@ -147,15 +146,17 @@ void deleteDatasetFromTree(const QString& dataset_name, QTreeWidget* tree)
     else {
         QList<QTreeWidgetItem*> parent_list = tree->findItems(dataset_base, Qt::MatchExactly, 1);
         for (QTreeWidgetItem* parent : parent_list) {
-            QTreeWidgetItem* matching_child;
+            QTreeWidgetItem* matching_child = nullptr;
             const int child_count = parent->childCount();
             for (int i = 0; i < child_count; ++i) {
                 if (getName(parent->child(i)) == dataset_spec) {
                     matching_child = parent->child(i);
                 }
             }
-            parent->removeChild(matching_child);
-            delete matching_child;
+            if (matching_child != nullptr) {
+                parent->removeChild(matching_child);
+                delete matching_child;
+            }
             if (parent->childCount() == 0) {
                 delete parent;
             }
