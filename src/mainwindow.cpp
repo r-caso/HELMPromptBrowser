@@ -465,12 +465,14 @@ void MainWindow::on_search_pushButton_clicked()
         }
 
         addPromptsToTree(dataset, instances, queries, search_is_case_sensitive, ui->prompts_treeWidget);
-        m_currentlySelectedDatasets.push_back(dataset);
     }
 
     if (ui->prompts_treeWidget->topLevelItemCount() > 0) {
         ui->delete_pushButton->setEnabled(true);
         ui->clear_pushButton->setEnabled(true);
+        ui->selectPrompt_pushButton->setEnabled(true);
+        ui->deselectPrompt_pushButton->setEnabled(true);
+        ui->assignCID_pushButton->setEnabled(true);
     }
 }
 
@@ -809,9 +811,11 @@ void MainWindow::on_clear_pushButton_clicked()
 {
     ui->prompts_treeWidget->clear();
     ui->prompt_plainTextEdit->clear();
-    m_currentlySelectedDatasets.clear();
     ui->delete_pushButton->setEnabled(false);
     ui->clear_pushButton->setEnabled(false);
+    ui->selectPrompt_pushButton->setEnabled(false);
+    ui->deselectPrompt_pushButton->setEnabled(false);
+    ui->assignCID_pushButton->setEnabled(false);
 }
 
 
