@@ -511,3 +511,23 @@ void transformDatasetTree(QTreeWidget* dataset_tree, std::function<void(QTreeWid
         }
     }
 }
+
+bool matches(const QString& prompt, const QList<QPair<QStringList, QStringList>>& queries, const bool case_sensitivity) {
+    const auto prompt_matches_term = [&](const QString& term) { return prompt.contains(term, (case_sensitivity ? Qt::CaseSensitive : Qt::CaseInsensitive));};
+    bool match = false;
+
+    for (const auto& query : queries) {
+        const auto& [inclusions, exclusions] = query;
+        const bool matches_all_inclusions = std::ranges::all_of(inclusions, prompt_matches_term);
+        const bool matches_some_exclusion = std::ranges::any_of(exclusions, prompt_matches_term);
+        if (!matches_all_inclusions || matches_some_exclusion) {
+            continue;
+        }
+        else {
+            match = true;
+            break;
+        }
+    }
+
+    return match;
+}
