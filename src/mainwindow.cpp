@@ -968,3 +968,52 @@ void MainWindow::on_assignCID_pushButton_clicked()
     }
 }
 
+
+void MainWindow::on_filter_pushButton_clicked()
+{
+    /*****************************
+     * CHECK SOME PRE-REQUISITES *
+     *****************************/
+
+    if (ui->prompts_treeWidget->topLevelItemCount() == 0){
+        Warn("Nothing to filter!");
+        return;
+    }
+    if (ui->filter_lineEdit->text().isEmpty()) {
+        Warn("No filtering condition has been provided");
+        return;
+    }
+
+    /*******************************
+     * CHECK QUERY WELL-FORMEDNESS *
+     *******************************/
+
+    const QString filter_term = ui->search_lineEdit->text().trimmed().replace("NOT", "!").replace("AND", "&").replace("OR", "|");
+    if (!checkQuery(filter_term)) {
+        Warn("Filter query is not well-formed");
+        return;
+    }
+
+    /***********************************************
+     * PARSE QUERY AND SET SEARCH CASE-SENSITIVITY *
+     ***********************************************/
+
+    const QList<QPair<QList<QString>, QList<QString>>> queries = getQueries(filter_term);
+    const bool filter_is_case_sensitive = ui->filter_case_sensitive_checkBox->isChecked();
+
+    /***************************
+     * FINALLY, FILTER PROMPTS *
+     ***************************/
+
+    const auto filter_prompt = [&](QTreeWidgetItem* item) -> void {
+        const QString& prompt = getPrompt(item);
+        if (matches(prompt, queries, filter_is_case_sensitive)) {
+            QTreeWidgetItem* parent = item->parent();
+            parent->removeChild(item);
+            delete item;
+        }
+    };
+
+    transformPromptTree(ui->prompts_treeWidget, filter_prompt);
+}
+
