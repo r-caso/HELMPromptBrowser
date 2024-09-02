@@ -72,7 +72,6 @@ private:
     QString m_compilationName;
     QString m_helmDataJSON;
     QString m_importFileFolder;
-    QStringList m_currentlySelectedDatasets;
     QStack<QPair<QTreeWidgetItem*, QTreeWidgetItem*>> m_undoStack;
     QStack<QPair<QTreeWidgetItem*, QTreeWidgetItem*>> m_redoStack;
     bool m_DontShowEmptySearchMessage = false;

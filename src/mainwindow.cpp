@@ -2,7 +2,6 @@
 #include "./ui_mainwindow.h"
 
 #include <algorithm>
-#include <iostream>
 #include <map>
 #include <tuple>
 
@@ -348,6 +347,7 @@ MainWindow::MainWindow(QWidget *parent)
     };
 
     ui->dataset_treeWidget->setColumnCount(2);
+    //ui->dataset_treeWidget->setColumnWidth(0, 400);
     ui->dataset_treeWidget->hideColumn(1);
 
     for (const auto& [task, sub_task_number_of_models] : HELM_hierarchy) {
@@ -434,7 +434,7 @@ void MainWindow::on_search_pushButton_clicked()
      * GET DATASETS TO ADD TO PROMPT TREE *
      **************************************/
 
-    const QStringList datasets_to_be_added = getDatasetsToAdd(ui->dataset_treeWidget, ui->prompts_treeWidget, m_currentlySelectedDatasets);
+    const QStringList datasets_to_be_added = getSelectedDatasetNames(ui->dataset_treeWidget);
 
     /****************************************************
      * GET DIRECTORIES WHERE INSTANCE FILES ARE LOCATED *
@@ -585,7 +585,6 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
     for (int i = 0; i < dataset_count; ++i) {
         ui->dataset_treeWidget->topLevelItem(i)->setCheckState(0, Qt::Unchecked);
     }
-    m_currentlySelectedDatasets.clear();
 
     const QJsonDocument custom_dataset = QJsonDocument::fromJson(jsonFile.readAll());
     const QJsonArray datasets = custom_dataset["datasets"].toArray();
@@ -648,7 +647,7 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
      * CORE PROMPT ADDITION LOGIC *
      ******************************/
 
-    const QStringList datasets_to_be_added = getDatasetsToAdd(ui->dataset_treeWidget, ui->prompts_treeWidget, m_currentlySelectedDatasets);
+    const QStringList datasets_to_be_added = getSelectedDatasetNames(ui->dataset_treeWidget);
     const QStringList task_dirs = getHelmTaskDirs(datasets_to_be_added, m_helmDataPath);
     Q_ASSERT_X(task_dirs.size() == datasets_to_be_added.size(), "Taks directories and selected datasets have different cardinalities", "mainwindow.cpp");
     const QList<QPair<QList<QString>, QList<QString>>> queries = {{},{}};
@@ -664,7 +663,6 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
         }
 
         addPromptsToTree(dataset, instances, queries, search_is_case_sensitive, ui->prompts_treeWidget);
-        m_currentlySelectedDatasets.push_back(dataset);
     }
 
     if (ui->prompts_treeWidget->topLevelItemCount() > 0) {
@@ -992,7 +990,7 @@ void MainWindow::on_filter_pushButton_clicked()
      * CHECK QUERY WELL-FORMEDNESS *
      *******************************/
 
-    const QString filter_term = ui->search_lineEdit->text().trimmed().replace("NOT", "!").replace("AND", "&").replace("OR", "|");
+    const QString filter_term = ui->filter_lineEdit->text().trimmed().replace("NOT", "!").replace("AND", "&").replace("OR", "|");
     if (!checkQuery(filter_term)) {
         Warn("Filter query is not well-formed");
         return;
