@@ -60,6 +60,8 @@ private slots:
 
     void on_filterByNumber_FilterModels_pushButton_clicked();
 
+    void on_assignCID_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QString m_helmDataPath;

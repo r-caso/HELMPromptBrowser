@@ -446,6 +446,34 @@
               </widget>
              </item>
              <item>
+              <widget class="QPushButton" name="assignCID_pushButton">
+               <property name="minimumSize">
+                <size>
+                 <width>30</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>30</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Assign CID (c)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="statusTip">
+                <string>Assign CID to selected prompts (shortcut: c)</string>
+               </property>
+               <property name="whatsThis">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Assign Custom database ID (CID) to selected prompts&lt;/span&gt; (shortcuts: c)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>CID</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="delete_pushButton">
                <property name="enabled">
                 <bool>false</bool>

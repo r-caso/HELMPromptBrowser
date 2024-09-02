@@ -233,8 +233,8 @@ void setSelectedStatus(QTreeWidgetItem* item, bool status)
 {
     item->setData(7, Qt::DisplayRole, status);
     if (status) {
-        item->setForeground(1, Qt::blue);
-        item->setBackground(0, Qt::blue);
+        item->setForeground(1, Qt::cyan);
+        item->setBackground(0, Qt::cyan);
     }
     else {
         item->setForeground(1, Qt::darkGray);

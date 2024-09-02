@@ -8,6 +8,7 @@
 
 #include <QFile>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -390,6 +391,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     QShortcut* deselect_shortcut = new QShortcut(QKeySequence(Qt::Key_D), ui->prompts_treeWidget);
     connect(deselect_shortcut, SIGNAL(activated()), this, SLOT(on_deselectPrompt_pushButton_clicked()));
+
+    QShortcut* assign_CID_shortcut = new QShortcut(QKeySequence(Qt::Key_C), ui->prompts_treeWidget);
+    connect(assign_CID_shortcut, SIGNAL(activated()), this, SLOT(on_assignCID_pushButton_clicked()));
 
     QShortcut* clear_shortcut = new QShortcut(QKeySequence(Qt::Key_Y), ui->prompts_treeWidget);
     connect(clear_shortcut, SIGNAL(activated()), this, SLOT(on_clear_pushButton_clicked()));
@@ -948,5 +952,19 @@ void MainWindow::on_filterByNumber_FilterModels_pushButton_clicked()
     };
 
     transformDatasetTree(ui->dataset_treeWidget, disable_datasets_by_number_of_models);
+}
+
+
+void MainWindow::on_assignCID_pushButton_clicked()
+{
+    bool ok;
+    const QString CID = QInputDialog::getText(this, "Enter CID", "CID:", QLineEdit::Normal, "", &ok);
+
+    if (ok && !CID.isEmpty()) {
+        const QList<QTreeWidgetItem*> selected_prompts = ui->prompts_treeWidget->selectedItems();
+        for (QTreeWidgetItem* prompt : selected_prompts) {
+            setCID(prompt, CID);
+        }
+    }
 }
 
