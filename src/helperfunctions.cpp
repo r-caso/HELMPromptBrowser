@@ -444,33 +444,6 @@ void PopUp(const QString& message)
     msgBox.exec();
 }
 
-// Delete if responsiblity for dataset deletion is handled to delete button exclusively
-QStringList getDatasetsToAdd(QTreeWidget* source, QTreeWidget* destination, QStringList& previous_selection)
-{
-    QStringList selected_datasets = getSelectedDatasetNames(source);
-
-    /*
-    QStringList to_be_unregistered;
-    for (const QString& current_dataset : previous_selection) {
-        if (!selected_datasets.contains(current_dataset)) {
-            deleteDatasetFromTree(current_dataset, destination);
-            to_be_unregistered.push_back(current_dataset);
-        }
-    }
-    for (const QString& dataset : to_be_unregistered) {
-        previous_selection.removeAll(dataset);
-    }
-    */
-
-    /*QStringList datasets_to_be_added;
-    std::ranges::copy_if(selected_datasets, std::back_inserter(datasets_to_be_added),
-                         [&](const QString& dataset) -> bool { return !previous_selection.contains(dataset); });
-
-    return datasets_to_be_added;*/
-    return selected_datasets;
-}
-
-
 void transformPromptTree(QTreeWidget* prompt_tree, std::function<void(QTreeWidgetItem*)> transformation)
 {
     const size_t dataset_count = prompt_tree->topLevelItemCount();
