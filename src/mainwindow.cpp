@@ -957,7 +957,7 @@ void MainWindow::on_filterByNumber_FilterModels_pushButton_clicked()
 
 void MainWindow::on_assignCID_pushButton_clicked()
 {
-    bool ok;
+    bool ok = false;
     const QString CID = QInputDialog::getText(this, "Enter CID", "CID:", QLineEdit::Normal, "", &ok);
 
     if (ok && !CID.isEmpty()) {

@@ -346,17 +346,19 @@ void addPromptsToTree(const QString& dataset,
                       bool search_is_case_sensitive,
                       QTreeWidget* tree)
 {
+    // if prompt in prompt tree, skip adding
     auto [dataset_base, dataset_spec] = splitDatasetName(dataset);
+
     QList<QTreeWidgetItem*> base_item_match = tree->findItems(dataset_base, Qt::MatchExactly, 1);
     QList<QTreeWidgetItem*> spec_item_match;
 
     if (!dataset_spec.isEmpty()) {
-        spec_item_match = tree->findItems(dataset_spec, Qt::MatchExactly, 1);
+        spec_item_match = tree->findItems(dataset_spec, Qt::MatchExactly | Qt::MatchRecursive, 1);
     }
 
     QTreeWidgetItem* base_item = nullptr;
 
-    if (base_item_match.size() > 0) {
+    if (!base_item_match.empty()) {
         base_item = base_item_match.at(0);
     }
     else {
@@ -373,7 +375,7 @@ void addPromptsToTree(const QString& dataset,
 
     QTreeWidgetItem* spec_item = nullptr;
     if (!dataset_spec.isEmpty()) {
-        if (spec_item_match.size() > 0) {
+        if (!spec_item_match.empty()) {
             spec_item = spec_item_match.at(0);
         }
         else {
@@ -391,31 +393,26 @@ void addPromptsToTree(const QString& dataset,
         const QJsonObject obj = instances.array().at(i).toObject();
         const QString prompt = obj["input"].toObject()["text"].toString();
 
-        const auto prompt_matches_term = [&](const QString& term) { return prompt.contains(term, (search_is_case_sensitive ? Qt::CaseSensitive : Qt::CaseInsensitive));};
+        bool match = matches(prompt, queries, search_is_case_sensitive);
 
-        // for every pair in queries
-        // if matches every inclusion, and matches no exclusion, add prompt
-
-        bool prompt_matches = false;
-
-        for (const auto& query : queries) {
-            bool matches_all_inclusions = std::ranges::all_of(query.first, prompt_matches_term);
-            bool matches_some_exclusion = std::ranges::any_of(query.second, prompt_matches_term);
-            if (!matches_all_inclusions || matches_some_exclusion)
-            {
-                continue;
-            }
-            else {
-                prompt_matches = true;
-                break;
-            }
-        }
-
-        if (!prompt_matches) {
+        if (!match) {
             continue;
         }
 
         const QString prompt_id = obj["id"].toString();
+
+        bool prompt_is_in_tree = false;
+        const size_t number_of_prompts = parent->childCount();
+        for (int j = 0; j < number_of_prompts; ++j) {
+            QTreeWidgetItem* prompt = parent->child(j);
+            if (getPID(prompt) == prompt_id) {
+                prompt_is_in_tree = true;
+                break;
+            }
+        }
+        if (prompt_is_in_tree) {
+            continue;
+        }
 
         QTreeWidgetItem* child = new QTreeWidgetItem();
         child->setFlags(child->flags() | Qt::ItemIsEditable);
@@ -447,10 +444,12 @@ void PopUp(const QString& message)
     msgBox.exec();
 }
 
+// Delete if responsiblity for dataset deletion is handled to delete button exclusively
 QStringList getDatasetsToAdd(QTreeWidget* source, QTreeWidget* destination, QStringList& previous_selection)
 {
     QStringList selected_datasets = getSelectedDatasetNames(source);
 
+    /*
     QStringList to_be_unregistered;
     for (const QString& current_dataset : previous_selection) {
         if (!selected_datasets.contains(current_dataset)) {
@@ -461,12 +460,14 @@ QStringList getDatasetsToAdd(QTreeWidget* source, QTreeWidget* destination, QStr
     for (const QString& dataset : to_be_unregistered) {
         previous_selection.removeAll(dataset);
     }
+    */
 
-    QStringList datasets_to_be_added;
+    /*QStringList datasets_to_be_added;
     std::ranges::copy_if(selected_datasets, std::back_inserter(datasets_to_be_added),
                          [&](const QString& dataset) -> bool { return !previous_selection.contains(dataset); });
 
-    return datasets_to_be_added;
+    return datasets_to_be_added;*/
+    return selected_datasets;
 }
 
 
