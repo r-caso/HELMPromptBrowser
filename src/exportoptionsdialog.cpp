@@ -18,6 +18,7 @@ ExportOptionsDialog::ExportOptionsDialog(QString& output_path, QString& output_f
     ui->export_path_lineEdit->setText(m_outputPath);
     ui->fileName_lineEdit->setText(m_outputFile);
     ui->compilationName_lineEdit->setText(m_compilationName);
+    ui->helmDataJSON_lineEdit->setText(m_helmDataJSON);
 }
 
 ExportOptionsDialog::~ExportOptionsDialog()

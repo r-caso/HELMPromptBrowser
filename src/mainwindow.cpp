@@ -473,6 +473,7 @@ void MainWindow::on_search_pushButton_clicked()
         ui->selectPrompt_pushButton->setEnabled(true);
         ui->deselectPrompt_pushButton->setEnabled(true);
         ui->assignCID_pushButton->setEnabled(true);
+        ui->clearCID_pushButton->setEnabled(true);
     }
 }
 
@@ -703,6 +704,17 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
     };
 
     transformPromptTree(ui->prompts_treeWidget, is_selected);
+
+    ui->delete_pushButton->setEnabled(true);
+    ui->clear_pushButton->setEnabled(true);
+    ui->selectPrompt_pushButton->setEnabled(true);
+    ui->deselectPrompt_pushButton->setEnabled(true);
+    ui->assignCID_pushButton->setEnabled(true);
+    ui->clearCID_pushButton->setEnabled(true);
+}
+
+static int number_of_selected_prompts(const QTreeWidgetItem* item) {
+    return 0;
 }
 
 void MainWindow::on_export_pushButton_clicked()
@@ -719,6 +731,10 @@ void MainWindow::on_export_pushButton_clicked()
         if (result == QDialog::Rejected) {
             return;
         }
+    }
+
+    if (!QDir(m_outputPath).exists()) {
+        QDir().mkdir(m_outputPath);
     }
 
     QFile output_file(m_outputPath + "/" + m_jsonFileName + ".json");
@@ -769,9 +785,11 @@ void MainWindow::on_export_pushButton_clicked()
     for (int i = 0; i < item_count; ++i) {
         QTreeWidgetItem* parent = ui->prompts_treeWidget->topLevelItem(i);
 
-        const QString dataset_base = getName(parent);
-
         if (!hasSpecifications(parent)) {
+            if (number_of_selected_prompts(parent) == 0) {
+                continue;
+            }
+            const QString dataset_base = getName(parent);
             const QString dataset_spec = {};
             dataset_array.append(getDatasetObj(parent, dataset_base, dataset_spec, helm_data_json));
             continue;
@@ -780,6 +798,10 @@ void MainWindow::on_export_pushButton_clicked()
         const int spec_count = parent->childCount();
         for (int i = 0; i < spec_count; ++i) {
             const QTreeWidgetItem* spec = parent->child(i);
+            if (number_of_selected_prompts(spec) == 0) {
+                continue;
+            }
+            const QString dataset_base = getName(parent);
             const QString dataset_spec = getName(spec);
             dataset_array.append(getDatasetObj(spec, dataset_base, dataset_spec, helm_data_json));
         }
@@ -820,6 +842,7 @@ void MainWindow::on_clear_pushButton_clicked()
     ui->selectPrompt_pushButton->setEnabled(false);
     ui->deselectPrompt_pushButton->setEnabled(false);
     ui->assignCID_pushButton->setEnabled(false);
+    ui->clearCID_pushButton->setEnabled(false);
 }
 
 
@@ -911,15 +934,29 @@ void MainWindow::writeSettings()
 
 void MainWindow::readSettings()
 {
-    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "IIF-SADAF-CONICET", "HELMPromptBrowser");
+    const QSettings settings(QSettings::IniFormat, QSettings::UserScope, "IIF-SADAF-CONICET", "HELMPromptBrowser");
 
     m_helmDataPath = settings.value("HELM_Path").toString();
-    m_outputPath = settings.value("Output_Path").toString();
-    m_jsonFileName = settings.value("JSONFile").toString();
-    m_compilationName = settings.value("CompilationName").toString();
-    m_helmDataJSON = settings.value("HELM_JSON").toString();
     m_importFileFolder = settings.value("IMPORT_JSON_FOLDER").toString();
+    m_outputPath = settings.value("Output_Path").toString();
+
+    m_helmDataJSON = settings.value("HELM_JSON").toString();
+    m_jsonFileName = settings.value("JSONFile").toString();
+
+    m_compilationName = settings.value("CompilationName").toString();
     m_DontShowEmptySearchMessage = settings.value("DontShowAgain").toBool();
+
+    if (!QDir(m_importFileFolder).exists()) {
+        m_importFileFolder = QStandardPaths::displayName(QStandardPaths::DocumentsLocation);
+    }
+
+    if (!QDir(m_helmDataPath).exists()) {
+        m_helmDataPath.clear();
+    }
+
+    if (!QFile(m_helmDataJSON).exists()) {
+        m_helmDataJSON.clear();
+    }
 }
 
 void MainWindow::on_filterByNumber_FilterModels_pushButton_clicked()
@@ -971,7 +1008,7 @@ void MainWindow::on_assignCID_pushButton_clicked()
     bool ok = false;
     const QString CID = QInputDialog::getText(this, "Enter CID", "CID:", QLineEdit::Normal, "", &ok);
 
-    if (ok && !CID.isEmpty()) {
+    if (ok) {
         const QList<QTreeWidgetItem*> selected_prompts = ui->prompts_treeWidget->selectedItems();
         for (QTreeWidgetItem* prompt : selected_prompts) {
             setCID(prompt, CID);
@@ -1029,5 +1066,14 @@ void MainWindow::on_filter_pushButton_clicked()
     };
 
     transformPromptTree(ui->prompts_treeWidget, filter_prompt);
+}
+
+
+void MainWindow::on_clearCID_pushButton_clicked()
+{
+    const QList<QTreeWidgetItem*> selected_prompts = ui->prompts_treeWidget->selectedItems();
+    for (QTreeWidgetItem* prompt : selected_prompts) {
+        setCID(prompt, "");
+    }
 }
 

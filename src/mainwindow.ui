@@ -483,6 +483,37 @@
               </widget>
              </item>
              <item>
+              <widget class="QPushButton" name="clearCID_pushButton">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>35</width>
+                 <height>35</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>35</width>
+                 <height>35</height>
+                </size>
+               </property>
+               <property name="toolTip">
+                <string>Unset CID (Shift+C)</string>
+               </property>
+               <property name="whatsThis">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Unset Custom database ID (CID) of selected prompts&lt;/span&gt; (shortcuts: Shift+C)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color: red</string>
+               </property>
+               <property name="text">
+                <string>CID</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="delete_pushButton">
                <property name="enabled">
                 <bool>false</bool>
@@ -879,7 +910,7 @@
      <x>0</x>
      <y>0</y>
      <width>1052</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
