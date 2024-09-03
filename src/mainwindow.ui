@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1052</width>
-    <height>711</height>
+    <height>714</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -469,16 +469,16 @@
                 </size>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Assign CID (c)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Assign CID (a)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="statusTip">
-                <string>Assign CID to selected prompts (shortcut: c)</string>
+                <string>Assign CID to selected prompts (shortcut: a)</string>
                </property>
                <property name="whatsThis">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Assign Custom database ID (CID) to selected prompts&lt;/span&gt; (shortcuts: c)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>CID</string>
+                <string>A</string>
                </property>
               </widget>
              </item>
@@ -500,16 +500,19 @@
                 </size>
                </property>
                <property name="toolTip">
-                <string>Unset CID (Shift+C)</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clear CID (c)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="statusTip">
+                <string>Clear CID for selected prompts (shortcut: c)</string>
                </property>
                <property name="whatsThis">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Unset Custom database ID (CID) of selected prompts&lt;/span&gt; (shortcuts: Shift+C)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Clear Custom database ID (CID) of selected prompts&lt;/span&gt; (shortcuts: Shift+C)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="styleSheet">
-                <string notr="true">color: red</string>
+                <string notr="true"/>
                </property>
                <property name="text">
-                <string>CID</string>
+                <string>C</string>
                </property>
               </widget>
              </item>
@@ -531,10 +534,10 @@
                 </size>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delete dataset(Del; x)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delete dataset (del)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="statusTip">
-                <string>Delete dataset from prompt tree (shortcuts: Del, x)</string>
+                <string>Delete dataset from prompt tree (shortcuts: Del)</string>
                </property>
                <property name="whatsThis">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Delete dataset from prompt tree&lt;/span&gt; (shortcuts: Del, x)&lt;/p&gt;&lt;p&gt;This action will remove the selected dataset from the prompt tree.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -571,10 +574,10 @@
                 </size>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Undo deletion (Ctrl-Z; u)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Undo deletion (Ctrl-Z)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="statusTip">
-                <string>Undo last dataset deletion (shortcuts: Ctrl+Z; u)</string>
+                <string>Undo last dataset deletion (shortcuts: Ctrl+Z)</string>
                </property>
                <property name="text">
                 <string/>
@@ -608,10 +611,10 @@
                 </size>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Redo deletion (Ctrl-Shift-Z; Ctrl-Y; y)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Redo deletion (Ctrl-Shift-Z; Ctrl-Y)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="statusTip">
-                <string>Redo last dataset deletion (Ctrl+Shift+Z; Ctrl+Y; y)</string>
+                <string>Redo last dataset deletion (Ctrl+Shift+Z; Ctrl+Y)</string>
                </property>
                <property name="text">
                 <string/>
@@ -910,7 +913,7 @@
      <x>0</x>
      <y>0</y>
      <width>1052</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>

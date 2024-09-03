@@ -341,13 +341,26 @@ QPair<QString, QString> splitDatasetName(const QString& dataset)
     return {dataset_base, dataset_spec};
 }
 
+bool has_selected_prompts(const QTreeWidgetItem* item) {
+    bool has_selected_prompts = false;
+
+    const size_t prompt_count = item->childCount();
+    for (size_t i = 0; i < prompt_count; ++i) {
+        if (isSelected(item->child(i))) {
+            has_selected_prompts = true;
+            break;
+        }
+    }
+
+    return has_selected_prompts;
+}
+
 void addPromptsToTree(const QString& dataset,
                       const QJsonDocument& instances,
                       const QList<QPair<QStringList, QStringList>>& queries,
                       bool search_is_case_sensitive,
                       QTreeWidget* tree)
 {
-    // if prompt in prompt tree, skip adding
     auto [dataset_base, dataset_spec] = splitDatasetName(dataset);
 
     QList<QTreeWidgetItem*> base_item_match = tree->findItems(dataset_base, Qt::MatchExactly, 1);
@@ -394,7 +407,7 @@ void addPromptsToTree(const QString& dataset,
         const QJsonObject obj = instances.array().at(i).toObject();
         const QString prompt = obj["input"].toObject()["text"].toString();
 
-        bool match = matches(prompt, queries, search_is_case_sensitive);
+        const bool match = matches(prompt, queries, search_is_case_sensitive);
 
         if (!match) {
             continue;
@@ -431,9 +444,13 @@ void addPromptsToTree(const QString& dataset,
     }
 
     if (spec_item != nullptr) {
-        base_item->addChild(parent);
+        if (spec_item->childCount() > 0) {
+            base_item->addChild(parent);
+        }
     }
-    tree->addTopLevelItem(base_item);
+    if (base_item->childCount() > 0) {
+        tree->addTopLevelItem(base_item);
+    }
 }
 
 void PopUp(const QString& message)
@@ -441,7 +458,7 @@ void PopUp(const QString& message)
     QMessageBox msgBox;
     msgBox.setText(message);
     msgBox.setStandardButtons(QMessageBox::NoButton);
-    QTimer::singleShot(1250, &msgBox, &QMessageBox::accept);
+    QTimer::singleShot(1500, &msgBox, &QMessageBox::accept);
     msgBox.exec();
 }
 

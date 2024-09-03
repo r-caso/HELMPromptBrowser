@@ -31,6 +31,7 @@ void transformDatasetTree(QTreeWidget* prompt_tree, std::function<void(QTreeWidg
 QStringList getHelmTaskDirs(const QStringList& datasets, const QString& helm_data_path);
 QPair<QString, QString> splitDatasetName(const QString& dataset);
 bool matches(const QString& prompt, const QList<QPair<QStringList, QStringList>>& queries, const bool case_sensitivity);
+bool has_selected_prompts(const QTreeWidgetItem* item);
 
 QString getCID(const QTreeWidgetItem* item);
 void setCID(QTreeWidgetItem* item, const QString& cid);

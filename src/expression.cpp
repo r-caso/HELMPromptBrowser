@@ -1,4 +1,4 @@
-#include "Expression.hpp"
+#include "expression.hpp"
 
 Expression::Expression()
     : op(Operator::NIL)

@@ -371,20 +371,17 @@ MainWindow::MainWindow(QWidget *parent)
 
     QShortcut* delete_shortcut1 = new QShortcut(QKeySequence(Qt::Key_Delete), ui->prompts_treeWidget);
     connect(delete_shortcut1, SIGNAL(activated()), this, SLOT(on_delete_pushButton_clicked()));
-    QShortcut* delete_shortcut2 = new QShortcut(QKeySequence(Qt::Key_X), ui->prompts_treeWidget);
-    connect(delete_shortcut2, SIGNAL(activated()), this, SLOT(on_delete_pushButton_clicked()));
 
     QShortcut* undo_shortcut_1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Z), ui->prompts_treeWidget);
     connect(undo_shortcut_1, SIGNAL(activated()), this, SLOT(on_undo_pushButton_clicked()));
-    QShortcut* undo_shortcut_2 = new QShortcut(QKeySequence(Qt::Key_U), ui->prompts_treeWidget);
-    connect(undo_shortcut_2, SIGNAL(activated()), this, SLOT(on_undo_pushButton_clicked()));
 
     QShortcut* redo_shortcut_1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Y), ui->prompts_treeWidget);
     connect(redo_shortcut_1, SIGNAL(activated()), this, SLOT(on_redo_pushButton_clicked()));
     QShortcut* redo_shortcut_2 = new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Z), ui->prompts_treeWidget);
     connect(redo_shortcut_2, SIGNAL(activated()), this, SLOT(on_redo_pushButton_clicked()));
-    QShortcut* redo_shortcut_3 = new QShortcut(QKeySequence(Qt::Key_Y), ui->prompts_treeWidget);
-    connect(redo_shortcut_3, SIGNAL(activated()), this, SLOT(on_redo_pushButton_clicked()));
+
+    QShortcut* clear_shortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_X), ui->prompts_treeWidget);
+    connect(clear_shortcut, SIGNAL(activated()), this, SLOT(on_clear_pushButton_clicked()));
 
     QShortcut* select_shortcut = new QShortcut(QKeySequence(Qt::Key_S), ui->prompts_treeWidget);
     connect(select_shortcut, SIGNAL(activated()), this, SLOT(on_selectPrompt_pushButton_clicked()));
@@ -392,11 +389,11 @@ MainWindow::MainWindow(QWidget *parent)
     QShortcut* deselect_shortcut = new QShortcut(QKeySequence(Qt::Key_D), ui->prompts_treeWidget);
     connect(deselect_shortcut, SIGNAL(activated()), this, SLOT(on_deselectPrompt_pushButton_clicked()));
 
-    QShortcut* assign_CID_shortcut = new QShortcut(QKeySequence(Qt::Key_C), ui->prompts_treeWidget);
+    QShortcut* assign_CID_shortcut = new QShortcut(QKeySequence(Qt::Key_A), ui->prompts_treeWidget);
     connect(assign_CID_shortcut, SIGNAL(activated()), this, SLOT(on_assignCID_pushButton_clicked()));
 
-    QShortcut* clear_shortcut = new QShortcut(QKeySequence(Qt::Key_Y), ui->prompts_treeWidget);
-    connect(clear_shortcut, SIGNAL(activated()), this, SLOT(on_clear_pushButton_clicked()));
+    QShortcut* clear_CID_shortcut = new QShortcut(QKeySequence(Qt::Key_C), ui->prompts_treeWidget);
+    connect(clear_CID_shortcut, SIGNAL(activated()), this, SLOT(on_clearCID_pushButton_clicked()));
 }
 
 MainWindow::~MainWindow()
@@ -474,6 +471,9 @@ void MainWindow::on_search_pushButton_clicked()
         ui->deselectPrompt_pushButton->setEnabled(true);
         ui->assignCID_pushButton->setEnabled(true);
         ui->clearCID_pushButton->setEnabled(true);
+    }
+    else {
+        PopUp("No match found in selected datasets");
     }
 }
 
@@ -713,9 +713,6 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
     ui->clearCID_pushButton->setEnabled(true);
 }
 
-static int number_of_selected_prompts(const QTreeWidgetItem* item) {
-    return 0;
-}
 
 void MainWindow::on_export_pushButton_clicked()
 {
@@ -780,38 +777,35 @@ void MainWindow::on_export_pushButton_clicked()
      *   +- ...
      */
 
-    const int item_count = ui->prompts_treeWidget->topLevelItemCount();
+    const size_t top_level_dataset_count = ui->prompts_treeWidget->topLevelItemCount();
+    for (size_t i = 0; i < top_level_dataset_count; ++i) {
+        QTreeWidgetItem* top_level_dataset = ui->prompts_treeWidget->topLevelItem(i);
 
-    for (int i = 0; i < item_count; ++i) {
-        QTreeWidgetItem* parent = ui->prompts_treeWidget->topLevelItem(i);
-
-        if (!hasSpecifications(parent)) {
-            if (number_of_selected_prompts(parent) == 0) {
+        if (!hasSpecifications(top_level_dataset)) {
+            if (!has_selected_prompts(top_level_dataset)) {
                 continue;
             }
-            const QString dataset_base = getName(parent);
+            const QString dataset_base = getName(top_level_dataset);
             const QString dataset_spec = {};
-            dataset_array.append(getDatasetObj(parent, dataset_base, dataset_spec, helm_data_json));
+            dataset_array.append(getDatasetObj(top_level_dataset, dataset_base, dataset_spec, helm_data_json));
             continue;
         }
 
-        const int spec_count = parent->childCount();
-        for (int i = 0; i < spec_count; ++i) {
-            const QTreeWidgetItem* spec = parent->child(i);
-            if (number_of_selected_prompts(spec) == 0) {
+        const size_t sub_dataset_count = top_level_dataset->childCount();
+        for (size_t i = 0; i < sub_dataset_count; ++i) {
+            const QTreeWidgetItem* sub_dataset = top_level_dataset->child(i);
+            if (!has_selected_prompts(sub_dataset)) {
                 continue;
             }
-            const QString dataset_base = getName(parent);
-            const QString dataset_spec = getName(spec);
-            dataset_array.append(getDatasetObj(spec, dataset_base, dataset_spec, helm_data_json));
+            const QString dataset_base = getName(top_level_dataset);
+            const QString dataset_spec = getName(sub_dataset);
+            dataset_array.append(getDatasetObj(sub_dataset, dataset_base, dataset_spec, helm_data_json));
         }
     }
 
     main_object.insert("compilation_name", m_compilationName);
     main_object.insert("datasets", dataset_array);
-
     custom_compilation.setObject(main_object);
-
     output_file.write(custom_compilation.toJson());
 
     PopUp("JSON exported");
@@ -820,8 +814,14 @@ void MainWindow::on_export_pushButton_clicked()
 void MainWindow::on_delete_pushButton_clicked()
 {
     for (QTreeWidgetItem* current_item : ui->prompts_treeWidget->selectedItems()) {
-        QTreeWidgetItem* current_parent = current_item->parent();
+        QTreeWidgetItem* current_parent = current_item->parent(); // may be nullptr
         m_undoStack.push({ current_item, current_parent });
+
+        if (current_parent == nullptr) { // current_item is top level dataset
+            const int index = ui->prompts_treeWidget->indexOfTopLevelItem(current_item);
+            (void)ui->prompts_treeWidget->takeTopLevelItem(index);
+            continue;
+        }
 
         current_parent->removeChild(current_item);
     }
@@ -849,6 +849,11 @@ void MainWindow::on_clear_pushButton_clicked()
 void MainWindow::on_undo_pushButton_clicked()
 {
     auto [item, parent] = m_undoStack.pop();
+    if (parent == nullptr) {
+        ui->prompts_treeWidget->addTopLevelItem(item);
+        return;
+    }
+
     parent->addChild(item);
 
     m_redoStack.push({item, parent});
@@ -864,6 +869,13 @@ void MainWindow::on_redo_pushButton_clicked()
 {
     auto [item, parent] = m_redoStack.pop();
     m_undoStack.push({ item, parent });
+
+    if (parent == nullptr) {
+        const int index = ui->prompts_treeWidget->indexOfTopLevelItem(item);
+        (void)ui->prompts_treeWidget->takeTopLevelItem(index);
+        return;
+    }
+
     parent->removeChild(item);
 
     ui->undo_pushButton->setEnabled(true);
