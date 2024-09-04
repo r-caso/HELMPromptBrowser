@@ -5,9 +5,11 @@
 #include <map>
 #include <tuple>
 
+#include <QCompleter>
 #include <QFile>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QLineEdit>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -1017,15 +1019,36 @@ void MainWindow::on_filterByNumber_FilterModels_pushButton_clicked()
 
 void MainWindow::on_assignCID_pushButton_clicked()
 {
-    bool ok = false;
-    const QString CID = QInputDialog::getText(this, "Enter CID", "CID:", QLineEdit::Normal, "", &ok);
+    QCompleter* completer = new QCompleter(m_CIDList, this);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+
+    QInputDialog* dialog = new QInputDialog(this);
+    dialog->setLabelText("CID:");
+    dialog->setInputMode(QInputDialog::TextInput);
+    dialog->setWindowTitle("Enter CID");
+    dialog->adjustSize();
+
+    QLineEdit* lineEdit = dialog->parent()->findChild<QLineEdit*>("");
+
+    if (lineEdit != nullptr) {
+        lineEdit->setCompleter(completer);
+    }
+
+    bool ok = dialog->exec();
+    const QString CID = dialog->textValue();
 
     if (ok) {
+        if (!m_CIDList.contains(CID)) {
+            m_CIDList.push_back(CID);
+        }
         const QList<QTreeWidgetItem*> selected_prompts = ui->prompts_treeWidget->selectedItems();
         for (QTreeWidgetItem* prompt : selected_prompts) {
             setCID(prompt, CID);
         }
     }
+
+    delete dialog;
+    delete completer;
 }
 
 
