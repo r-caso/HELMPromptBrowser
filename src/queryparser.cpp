@@ -101,7 +101,7 @@ QList<QPair<QList<QString>, QList<QString>>> getQueries(const QString& query_str
         for (const auto& string : exclusion) {
             q_exclusion.push_back(QString::fromStdString(string));
         }
-        QPair<QList<QString>, QList<QString>> q_pair({q_inclusion, q_exclusion});
+        QPair<QList<QString>, QList<QString>> const q_pair({q_inclusion, q_exclusion});
         q.push_back(q_pair);
     }
 

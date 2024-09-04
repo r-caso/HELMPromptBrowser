@@ -49,7 +49,7 @@ bool parse(const std::string& query, AST& parsetree)
 {
     auto begin = query.cbegin();
     auto end = query.cend();
-    bool result = boost::spirit::qi::parse(begin, end, BooleanGrammar(), parsetree);
+    bool const result = boost::spirit::qi::parse(begin, end, BooleanGrammar(), parsetree);
     if (begin != end) {
         return false;
     }
@@ -60,7 +60,7 @@ bool checkQuery(const std::string& query)
 {
     auto begin = query.cbegin();
     auto end = query.cend();
-    bool result = boost::spirit::qi::parse(begin, end, BooleanGrammar());
+    bool const result = boost::spirit::qi::parse(begin, end, BooleanGrammar());
     if (begin != end) {
         return false;
     }

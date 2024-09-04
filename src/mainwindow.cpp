@@ -570,7 +570,13 @@ void MainWindow::on_select_all_pushButton_clicked()
 
 void MainWindow::on_loadFromFile_pushButton_clicked()
 {
-    QString fromFile = QFileDialog::getOpenFileName(this, "Select custom compilation file", m_importFileFolder.isEmpty() ? QStandardPaths::displayName(QStandardPaths::DocumentsLocation) : m_importFileFolder, "*.json");
+    QString const fromFile = QFileDialog::getOpenFileName(this,
+                                                          "Select custom compilation file",
+                                                          m_importFileFolder.isEmpty()
+                                                              ? QStandardPaths::displayName(
+                                                                    QStandardPaths::DocumentsLocation)
+                                                              : m_importFileFolder,
+                                                          "*.json");
 
     // replace with proper return status check
     if (fromFile.isEmpty()) {
@@ -627,7 +633,8 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
     }
 
     for (auto top_level_dataset = tree.cbegin(); top_level_dataset != tree.cend(); ++top_level_dataset) {
-        QList<QTreeWidgetItem*> matches = ui->dataset_treeWidget->findItems(top_level_dataset.key(), Qt::MatchExactly, 0);
+        QList<QTreeWidgetItem *> const matches
+            = ui->dataset_treeWidget->findItems(top_level_dataset.key(), Qt::MatchExactly, 0);
         const QStringList& sub_datasets = top_level_dataset.value();
 
         if (sub_datasets.isEmpty()) {
@@ -726,7 +733,7 @@ void MainWindow::on_export_pushButton_clicked()
     while (m_outputPath.isEmpty() || m_jsonFileName.isEmpty() || m_compilationName.isEmpty() || m_helmDataJSON.isEmpty()) {
         ExportOptionsDialog* options = new ExportOptionsDialog(m_outputPath, m_jsonFileName, m_compilationName, m_helmDataJSON);
         options->setAttribute(Qt::WA_DeleteOnClose);
-        int result = options->exec();
+        int const result = options->exec();
         if (result == QDialog::Rejected) {
             return;
         }
@@ -756,7 +763,7 @@ void MainWindow::on_export_pushButton_clicked()
     QJsonObject main_object;
     QJsonArray dataset_array;
 
-    QJsonObject helm_data_json = loadHelmDataConfig(m_helmDataJSON);
+    QJsonObject const helm_data_json = loadHelmDataConfig(m_helmDataJSON);
     if (helm_data_json.isEmpty()) {
         Warn("Helm Dataset Configuration empty!\nAborting export.");
         return;
@@ -1034,7 +1041,7 @@ void MainWindow::on_assignCID_pushButton_clicked()
         lineEdit->setCompleter(completer);
     }
 
-    bool ok = dialog->exec();
+    const bool ok = dialog->exec();
     const QString CID = dialog->textValue();
 
     if (ok) {

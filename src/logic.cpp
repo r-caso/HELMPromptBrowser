@@ -99,7 +99,7 @@ Expression toNNF(const Expression& expr)
         return expr;
     }
     if (isNegation(expr)) {
-        std::shared_ptr<Expression> scope = expr.child(0);
+        std::shared_ptr<Expression> const scope = expr.child(0);
 
         if (isAtomic(scope)) {
             return expr;

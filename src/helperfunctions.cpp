@@ -74,12 +74,8 @@ QString prettyPrint(const QJsonObject& obj, const QString& dataset)
         perturbed += "PERTURBATION: prompt is perturbed";
     }
 
-    QString str = "DATASET: " + dataset + "\n" +
-                  "PROMPT ID: " + prompt_id + "\n\n" +
-                  input_text +
-                  references_text +
-                  subsplit +
-                  perturbed;
+    QString const str = "DATASET: " + dataset + "\n" + "PROMPT ID: " + prompt_id + "\n\n"
+                        + input_text + references_text + subsplit + perturbed;
 
     return str.trimmed();
 }
@@ -93,7 +89,7 @@ QStringList getSelectedDatasetNames(const QTreeWidget* tree)
     // process top level datasets
     for (int i = 0; i < top_level_dataset_count; ++i) {
         QTreeWidgetItem* parent = tree->topLevelItem(i);
-        QString parent_name = parent->data(0, Qt::DisplayRole).toString();
+        QString const parent_name = parent->data(0, Qt::DisplayRole).toString();
 
         if (parent->checkState(0) == Qt::Unchecked) {
             continue;
@@ -109,7 +105,7 @@ QStringList getSelectedDatasetNames(const QTreeWidget* tree)
         // process each sub-dataset
         for (int j = 0; j < parent->childCount(); ++j) {
             QTreeWidgetItem* child = parent->child(j);
-            QString child_name = child->data(0, Qt::DisplayRole).toString();
+            QString const child_name = child->data(0, Qt::DisplayRole).toString();
 
             // if sub-dataset is unchecked, delete it from prompt tree if present, ignore it if not
             if (child->checkState(0) == Qt::Unchecked) {
@@ -138,13 +134,17 @@ void deleteDatasetFromTree(const QString& dataset_name, QTreeWidget* tree)
     auto [dataset_base, dataset_spec] = splitDatasetName(dataset_name);
 
     if (dataset_spec.isEmpty()) {
-        QList<QTreeWidgetItem*> deletion_list = tree->findItems(dataset_base, Qt::MatchExactly, 1);
+        QList<QTreeWidgetItem *> const deletion_list = tree->findItems(dataset_base,
+                                                                       Qt::MatchExactly,
+                                                                       1);
         for (QTreeWidgetItem* dataset : deletion_list) {
             delete dataset;
         }
     }
     else {
-        QList<QTreeWidgetItem*> parent_list = tree->findItems(dataset_base, Qt::MatchExactly, 1);
+        QList<QTreeWidgetItem *> const parent_list = tree->findItems(dataset_base,
+                                                                     Qt::MatchExactly,
+                                                                     1);
         for (QTreeWidgetItem* parent : parent_list) {
             QTreeWidgetItem* matching_child = nullptr;
             const int child_count = parent->childCount();
@@ -280,7 +280,7 @@ QJsonObject getDatasetObj(const QTreeWidgetItem* item, const QString& dataset_ba
     }
 
     QJsonObject dataset_specification;
-    QJsonObject samples = getSamples(item);
+    QJsonObject const samples = getSamples(item);
     dataset_specification.insert("dataset_spec", dataset_spec);
     dataset_specification.insert("metric", metric);
     dataset_specification.insert("split", split);
@@ -363,7 +363,9 @@ void addPromptsToTree(const QString& dataset,
 {
     auto [dataset_base, dataset_spec] = splitDatasetName(dataset);
 
-    QList<QTreeWidgetItem*> base_item_match = tree->findItems(dataset_base, Qt::MatchExactly, 1);
+    QList<QTreeWidgetItem *> const base_item_match = tree->findItems(dataset_base,
+                                                                     Qt::MatchExactly,
+                                                                     1);
     QList<QTreeWidgetItem*> spec_item_match;
 
     if (!dataset_spec.isEmpty()) {

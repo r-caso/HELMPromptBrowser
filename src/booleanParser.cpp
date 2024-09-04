@@ -41,7 +41,7 @@ bool BooleanParser::expression(Expression& expr)
     }
 
     if (expect(TokenType::NOT)) {
-        bool result = expression(expr);
+        bool const result = expression(expr);
         Expression new_expr = Expression(Operator::NOT);
         new_expr.addOperand(std::make_shared<Expression>(expr));
         expr = new_expr;
@@ -50,21 +50,22 @@ bool BooleanParser::expression(Expression& expr)
 
     if (expect(TokenType::LPAREN)) {
         Expression new_expr;
-        bool lhs_is_expression = expression(expr);
+        bool const lhs_is_expression = expression(expr);
         if (!lhs_is_expression) {
             return false;
         }
         
         new_expr.addOperand(std::make_shared<Expression>(expr));
 
-        bool main_connective_is_binary_operator = expect(TokenType::AND) || expect(TokenType::OR);
+        bool const main_connective_is_binary_operator = expect(TokenType::AND)
+                                                        || expect(TokenType::OR);
         if (!main_connective_is_binary_operator) {
             return false;
         }
         
         new_expr.op = (m_TokenList.at(m_Index - 1).second == TokenType::AND) ? Operator::AND : Operator::OR;
 
-        bool rhs_is_expression = expression(expr);
+        bool const rhs_is_expression = expression(expr);
         if (!rhs_is_expression) {
             return false;
         }
@@ -102,8 +103,7 @@ void BooleanParser::tokenize(const std::string& formula)
 
     std::stack<char> symbol_stack;
 
-    for (char c : formula)
-    {
+    for (char const c : formula) {
         if (!isalpha(c) && ident.size() > 0)
         {
             if (!symbol_stack.empty()) {
