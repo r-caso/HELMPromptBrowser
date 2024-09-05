@@ -92,7 +92,7 @@ QJsonObject getSamples(const QTreeWidgetItem* item)
     const int child_count = item->childCount();
     for (int i = 0; i < child_count; ++i) {
         const QTreeWidgetItem* child = item->child(i);
-        if (child->data(HELMPromptBrowser::IsSelectedColumn, Qt::DisplayRole).toBool()) {
+        if (child->data(HELMPromptBrowser::PTIsSelectedColumn, Qt::DisplayRole).toBool()) {
             samples.insert(getPID(child), getCID(child));
         }
     }
@@ -194,13 +194,13 @@ void addPromptsToTree(const QString& dataset,
     }
     else {
         base_item = new QTreeWidgetItem();
-        base_item->setData(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole, dataset_base);
-        base_item->setData(HELMPromptBrowser::IsPromptColumn, Qt::DisplayRole, false);
+        base_item->setData(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole, dataset_base);
+        base_item->setData(HELMPromptBrowser::PTIsPromptColumn, Qt::DisplayRole, false);
         if (dataset_spec.isEmpty()) {
-            base_item->setData(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole, false);
+            base_item->setData(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole, false);
         }
         else {
-            base_item->setData(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole, true);
+            base_item->setData(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole, true);
         }
     }
 
@@ -211,9 +211,9 @@ void addPromptsToTree(const QString& dataset,
         }
         else {
             spec_item = new QTreeWidgetItem();
-            spec_item->setData(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole, dataset_spec);
-            spec_item->setData(HELMPromptBrowser::IsPromptColumn, Qt::DisplayRole, false);
-            spec_item->setData(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole, false);
+            spec_item->setData(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole, dataset_spec);
+            spec_item->setData(HELMPromptBrowser::PTIsPromptColumn, Qt::DisplayRole, false);
+            spec_item->setData(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole, false);
         }
     }
 
@@ -247,16 +247,16 @@ void addPromptsToTree(const QString& dataset,
 
         QTreeWidgetItem* child = new QTreeWidgetItem();
         child->setFlags(child->flags() | Qt::ItemIsEditable);
-        child->setBackground(HELMPromptBrowser::CIDColumn, Qt::lightGray);
-        child->setForeground(HELMPromptBrowser::NameIDColumn, Qt::darkGray);
-        child->setData(HELMPromptBrowser::CIDColumn, Qt::DisplayRole, "");
-        child->setData(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole, prompt_id);
-        child->setData(HELMPromptBrowser::DatasetSpecColumn, Qt::DisplayRole, dataset_base);
-        child->setData(HELMPromptBrowser::DatasetSpecColumn, Qt::DisplayRole, dataset_spec);
-        child->setData(HELMPromptBrowser::IsPromptColumn, Qt::DisplayRole, true);
-        child->setData(HELMPromptBrowser::PromptContentsColumn, Qt::DisplayRole, prettyPrint(obj, dataset));
-        child->setData(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole, false);
-        child->setData(HELMPromptBrowser::IsSelectedColumn, Qt::DisplayRole, false);
+        child->setBackground(HELMPromptBrowser::PTCIDColumn, Qt::lightGray);
+        child->setForeground(HELMPromptBrowser::PTNameIDColumn, Qt::darkGray);
+        child->setData(HELMPromptBrowser::PTCIDColumn, Qt::DisplayRole, "");
+        child->setData(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole, prompt_id);
+        child->setData(HELMPromptBrowser::PTDatasetSpecColumn, Qt::DisplayRole, dataset_base);
+        child->setData(HELMPromptBrowser::PTDatasetSpecColumn, Qt::DisplayRole, dataset_spec);
+        child->setData(HELMPromptBrowser::PTIsPromptColumn, Qt::DisplayRole, true);
+        child->setData(HELMPromptBrowser::PTPromptContentsColumn, Qt::DisplayRole, prettyPrint(obj, dataset));
+        child->setData(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole, false);
+        child->setData(HELMPromptBrowser::PTIsSelectedColumn, Qt::DisplayRole, false);
         parent->addChild(child);
     }
 
@@ -466,59 +466,59 @@ void transformPromptTree(QTreeWidget* prompt_tree, const std::function<void(QTre
 
 QString getCID(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::CIDColumn, Qt::DisplayRole).toString();
+    return item->data(HELMPromptBrowser::PTCIDColumn, Qt::DisplayRole).toString();
 }
 QString getDatasetBase(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::DatasetBaseColumn, Qt::DisplayRole).toString();
+    return item->data(HELMPromptBrowser::PTDatasetBaseColumn, Qt::DisplayRole).toString();
 }
 QString getDatasetSpec(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::DatasetSpecColumn, Qt::DisplayRole).toString();
+    return item->data(HELMPromptBrowser::PTDatasetSpecColumn, Qt::DisplayRole).toString();
 }
 QString getName(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole).toString();
+    return item->data(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole).toString();
 }
 QString getPID(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole).toString();
+    return item->data(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole).toString();
 }
 QString getPrompt(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PromptContentsColumn, Qt::DisplayRole).toString();
+    return item->data(HELMPromptBrowser::PTPromptContentsColumn, Qt::DisplayRole).toString();
 }
 QString getReferences(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::ReferencesColumn, Qt::DisplayRole).toString();
+    return item->data(HELMPromptBrowser::PTReferencesColumn, Qt::DisplayRole).toString();
 }
 bool hasSpecifications(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole).toBool();
+    return item->data(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole).toBool();
 }
 bool isPrompt(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::IsPromptColumn, Qt::DisplayRole).toBool();
+    return item->data(HELMPromptBrowser::PTIsPromptColumn, Qt::DisplayRole).toBool();
 }
 bool isSelected(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::IsSelectedColumn, Qt::DisplayRole).toBool();
+    return item->data(HELMPromptBrowser::PTIsSelectedColumn, Qt::DisplayRole).toBool();
 }
 void setCID(QTreeWidgetItem* item, const QString& cid)
 {
-    item->setData(HELMPromptBrowser::CIDColumn, Qt::DisplayRole, cid);
+    item->setData(HELMPromptBrowser::PTCIDColumn, Qt::DisplayRole, cid);
 }
 void setSelectedStatus(QTreeWidgetItem* item, bool status)
 {
-    item->setData(HELMPromptBrowser::IsSelectedColumn, Qt::DisplayRole, status);
+    item->setData(HELMPromptBrowser::PTIsSelectedColumn, Qt::DisplayRole, status);
     if (status) {
-        item->setForeground(HELMPromptBrowser::NameIDColumn, Qt::black);
-        item->setBackground(HELMPromptBrowser::CIDColumn, Qt::blue);
-        item->setForeground(HELMPromptBrowser::CIDColumn, Qt::white);
+        item->setForeground(HELMPromptBrowser::PTNameIDColumn, Qt::black);
+        item->setBackground(HELMPromptBrowser::PTCIDColumn, Qt::blue);
+        item->setForeground(HELMPromptBrowser::PTCIDColumn, Qt::white);
     }
     else {
-        item->setForeground(HELMPromptBrowser::NameIDColumn, Qt::darkGray);
-        item->setBackground(HELMPromptBrowser::CIDColumn, Qt::lightGray);
-        item->setForeground(HELMPromptBrowser::CIDColumn, Qt::black);
+        item->setForeground(HELMPromptBrowser::PTNameIDColumn, Qt::darkGray);
+        item->setBackground(HELMPromptBrowser::PTCIDColumn, Qt::lightGray);
+        item->setForeground(HELMPromptBrowser::PTCIDColumn, Qt::black);
     }
 }
