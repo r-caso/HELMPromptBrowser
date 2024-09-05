@@ -6,13 +6,14 @@
 #include <tuple>
 
 #include <QCompleter>
+#include <QDialog>
 #include <QFile>
 #include <QFileDialog>
 #include <QInputDialog>
-#include <QLineEdit>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLineEdit>
 #include <QList>
 #include <QMap>
 #include <QMessageBox>
@@ -26,6 +27,7 @@
 
 #include "exportoptionsdialog.hpp"
 #include "helperfunctions.hpp"
+#include "hpb_globals.hpp"
 #include "queryparser.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -39,15 +41,16 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->HELM_Data_lineEdit->setText(m_helmDataPath);
 
-    ui->prompts_treeWidget->setColumnCount(prompt_tree_column_count);
+    ui->prompts_treeWidget->setColumnCount(HELMPromptBrowser::PromptTreeColumnCount);
     ui->prompts_treeWidget->setHeaderLabels({"Custom Dataset ID", "Dataset name / Prompt ID", "Dataset_base", "Dataset_spec", "IsPrompt", "Prompt", "HasSpecs", "Selected"});
-    ui->prompts_treeWidget->setColumnWidth(cid_column, 120);
-    ui->prompts_treeWidget->hideColumn(dataset_base_column);
-    ui->prompts_treeWidget->hideColumn(dataset_spec_column);
-    ui->prompts_treeWidget->hideColumn(is_prompt_column);
-    ui->prompts_treeWidget->hideColumn(prompt_contents_column);
-    ui->prompts_treeWidget->hideColumn(is_specified_column);
-    ui->prompts_treeWidget->hideColumn(selection_status_column);
+    ui->prompts_treeWidget->setColumnWidth(HELMPromptBrowser::CIDColumn, 120);
+    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::DatasetBaseColumn);
+    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::DatasetSpecColumn);
+    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::IsPromptColumn);
+    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::PromptContentsColumn);
+    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::ReferencesColumn);
+    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::HasSpecificationsColumn);
+    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::IsSelectedColumn);
     ui->prompts_treeWidget->header()->setStretchLastSection(true);
     ui->prompts_treeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
@@ -348,24 +351,23 @@ MainWindow::MainWindow(QWidget *parent)
         }
     };
 
-    ui->dataset_treeWidget->setColumnCount(2);
-    //ui->dataset_treeWidget->setColumnWidth(0, 400);
-    ui->dataset_treeWidget->hideColumn(1);
+    ui->dataset_treeWidget->setColumnCount(HELMPromptBrowser::DatasetTreeColumnCount);
+    ui->dataset_treeWidget->hideColumn(HELMPromptBrowser::NumberOfModelsPerDatasetColumn);
 
     for (const auto& [task, sub_task_number_of_models] : HELM_hierarchy) {
         QTreeWidgetItem* item = new QTreeWidgetItem();
-        item->setCheckState(0, Qt::Unchecked);
+        item->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Unchecked);
         item->setFlags(item->flags() | Qt::ItemIsAutoTristate);
-        item->setData(0, Qt::DisplayRole, task);
+        item->setData(HELMPromptBrowser::DatasetNameColumn, Qt::DisplayRole, task);
         for (const auto& [sub_task, number_of_models]  : sub_task_number_of_models) {
             if (sub_task.isEmpty()) {
-                item->setData(1, Qt::DisplayRole, number_of_models);
+                item->setData(HELMPromptBrowser::NumberOfModelsPerDatasetColumn, Qt::DisplayRole, number_of_models);
                 continue;
             }
             QTreeWidgetItem* child = new QTreeWidgetItem();
-            child->setCheckState(0, Qt::Unchecked);
-            child->setData(0, Qt::DisplayRole, sub_task);
-            child->setData(1, Qt::DisplayRole, number_of_models);
+            child->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Unchecked);
+            child->setData(HELMPromptBrowser::DatasetNameColumn, Qt::DisplayRole, sub_task);
+            child->setData(HELMPromptBrowser::NumberOfModelsPerDatasetColumn, Qt::DisplayRole, number_of_models);
             item->addChild(child);
         }
         ui->dataset_treeWidget->addTopLevelItem(item);
@@ -557,14 +559,14 @@ void MainWindow::on_HELM_Data_pushButton_clicked()
 void MainWindow::on_deselect_all_pushButton_clicked()
 {
     for (int i = 0; i < ui->dataset_treeWidget->topLevelItemCount(); ++i) {
-        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(0, Qt::Unchecked);
+        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Unchecked);
     }
 }
 
 void MainWindow::on_select_all_pushButton_clicked()
 {
     for (int i = 0; i < ui->dataset_treeWidget->topLevelItemCount(); ++i) {
-        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(0, Qt::Checked);
+        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Checked);
     }
 }
 
@@ -595,7 +597,7 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
 
     const int dataset_count = ui->dataset_treeWidget->topLevelItemCount();
     for (int i = 0; i < dataset_count; ++i) {
-        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(0, Qt::Unchecked);
+        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Unchecked);
     }
 
     const QJsonDocument custom_dataset = QJsonDocument::fromJson(jsonFile.readAll());
@@ -634,7 +636,7 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
 
     for (auto top_level_dataset = tree.cbegin(); top_level_dataset != tree.cend(); ++top_level_dataset) {
         QList<QTreeWidgetItem *> const matches
-            = ui->dataset_treeWidget->findItems(top_level_dataset.key(), Qt::MatchExactly, 0);
+            = ui->dataset_treeWidget->findItems(top_level_dataset.key(), Qt::MatchExactly, HELMPromptBrowser::DatasetNameColumn);
         const QStringList& sub_datasets = top_level_dataset.value();
 
         if (sub_datasets.isEmpty()) {
@@ -647,9 +649,9 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
                 const size_t child_count = item->childCount();
                 for (int i = 0; i < child_count; ++i) {
                     QTreeWidgetItem* child = item->child(i);
-                    const QString child_name = child->data(0, Qt::DisplayRole).toString();
+                    const QString child_name = child->data(HELMPromptBrowser::DatasetNameColumn, Qt::DisplayRole).toString();
                     if (sub_datasets.contains(child_name)) {
-                        child->setCheckState(0, Qt::Checked);
+                        child->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Checked);
                     }
                 }
             }
@@ -905,7 +907,7 @@ void MainWindow::on_exportOptions_pushButton_clicked()
 
 void MainWindow::on_prompts_treeWidget_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
-    if (!current) {
+    if (current == nullptr) {
         return;
     }
 

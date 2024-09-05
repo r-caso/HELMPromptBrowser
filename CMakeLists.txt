@@ -30,8 +30,8 @@ set(PROJECT_SOURCES
 
         src/booleangrammar.hpp
         src/booleangrammar.cpp
-        src/booleanParser.cpp
-        src/booleanParser.hpp
+        src/booleanparser.cpp
+        src/booleanparser.hpp
         src/expression.cpp
         src/expression.hpp
         src/logic.cpp
@@ -41,6 +41,9 @@ set(PROJECT_SOURCES
 
         src/helperfunctions.cpp
         src/helperfunctions.hpp
+
+        src/hpb_globals.hpp
+        src/hpb_globals.cpp
 )
 
 include_directories(

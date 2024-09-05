@@ -12,6 +12,12 @@
 #include <QTimer>
 #include <QTreeWidgetItem>
 
+#include "hpb_globals.hpp"
+
+/*****************
+ * QMessageBoxes *
+ *****************/
+
 int Ask(const QString& text, const QString& informative_text, bool& dont_show_again) {
     QMessageBox msg;
     msg.setText(text);
@@ -26,7 +32,15 @@ int Ask(const QString& text, const QString& informative_text, bool& dont_show_ag
     dont_show_again = cb->checkState();
     return result;
 }
-
+void PopUp(const QString& message)
+{
+    QMessageBox msgBox;
+    msgBox.setText(message);
+    msgBox.setStandardButtons(QMessageBox::NoButton);
+    const int popup_duration_ms = 1500;
+    QTimer::singleShot(popup_duration_ms, &msgBox, &QMessageBox::accept);
+    msgBox.exec();
+}
 void Warn(const QString& message)
 {
     QMessageBox msg;
@@ -35,6 +49,77 @@ void Warn(const QString& message)
     msg.exec();
 }
 
+
+/*******************************
+ * QJson convenience functions *
+ *******************************/
+
+QJsonObject getDatasetObj(const QTreeWidgetItem* item, const QString& dataset_base, const QString& dataset_spec, const QJsonObject& helm_data_json)
+{
+    QString metric;
+    QString split;
+
+    QString dataset_name = dataset_base;
+    if (!dataset_spec.isEmpty()) {
+        dataset_name += ":" + dataset_spec;
+    }
+    for (const auto& array : helm_data_json) {
+        for (auto&& obj : array.toArray()) {
+            if (obj.toObject()["name"] != dataset_name) {
+                continue;
+            }
+            metric = obj.toObject()["metric"].toString();
+            split = obj.toObject()["split"].toString();
+        }
+    }
+
+    QJsonObject dataset_specification;
+    QJsonObject const samples = getSamples(item);
+    dataset_specification.insert("dataset_spec", dataset_spec);
+    dataset_specification.insert("metric", metric);
+    dataset_specification.insert("split", split);
+    dataset_specification.insert("samples", samples);
+
+    QJsonObject dataset;
+    dataset.insert(dataset_base, dataset_specification);
+
+    return dataset;
+}
+QJsonObject getSamples(const QTreeWidgetItem* item)
+{
+    QJsonObject samples;
+
+    const int child_count = item->childCount();
+    for (int i = 0; i < child_count; ++i) {
+        const QTreeWidgetItem* child = item->child(i);
+        if (child->data(HELMPromptBrowser::IsSelectedColumn, Qt::DisplayRole).toBool()) {
+            samples.insert(getPID(child), getCID(child));
+        }
+    }
+
+    return samples;
+}
+QJsonDocument getTaskInstances(const QString& task_dir, const QString& helm_data_path)
+{
+    QFile instances_file(helm_data_path + "/" + task_dir + "/instances.json");
+    if (!instances_file.open(QIODevice::ReadOnly)) {
+        QMessageBox msg;
+        msg.setText("Failed to open instances.json from " + task_dir);
+        msg.exec();
+        return {};
+    }
+    return QJsonDocument::fromJson(instances_file.readAll());
+}
+QJsonObject loadHelmDataConfig(const QString& helm_data_json)
+{
+    QFile helm_data_json_file(helm_data_json);
+    if (!helm_data_json_file.open(QIODevice::ReadOnly)) {
+        return {};
+    }
+    const QJsonDocument helm_dataset_config = QJsonDocument::fromJson(helm_data_json_file.readAll());
+
+    return helm_dataset_config.toVariant().toJsonObject();
+}
 QString prettyPrint(const QJsonObject& obj, const QString& dataset)
 {
     const QJsonArray references = obj["references"].toArray();
@@ -80,6 +165,167 @@ QString prettyPrint(const QJsonObject& obj, const QString& dataset)
     return str.trimmed();
 }
 
+
+/******************************************************
+ * Dataset tree and prompt tree convenience functions *
+ ******************************************************/
+
+void addPromptsToTree(const QString& dataset,
+                      const QJsonDocument& instances,
+                      const QList<QPair<QStringList, QStringList>>& queries,
+                      bool search_is_case_sensitive,
+                      QTreeWidget* tree)
+{
+    auto [dataset_base, dataset_spec] = splitDatasetName(dataset);
+
+    QList<QTreeWidgetItem *> const base_item_match = tree->findItems(dataset_base,
+                                                                     Qt::MatchExactly,
+                                                                     1);
+    QList<QTreeWidgetItem*> spec_item_match;
+
+    if (!dataset_spec.isEmpty()) {
+        spec_item_match = tree->findItems(dataset_spec, Qt::MatchExactly | Qt::MatchRecursive, 1);
+    }
+
+    QTreeWidgetItem* base_item = nullptr;
+
+    if (!base_item_match.empty()) {
+        base_item = base_item_match.at(0);
+    }
+    else {
+        base_item = new QTreeWidgetItem();
+        base_item->setData(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole, dataset_base);
+        base_item->setData(HELMPromptBrowser::IsPromptColumn, Qt::DisplayRole, false);
+        if (dataset_spec.isEmpty()) {
+            base_item->setData(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole, false);
+        }
+        else {
+            base_item->setData(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole, true);
+        }
+    }
+
+    QTreeWidgetItem* spec_item = nullptr;
+    if (!dataset_spec.isEmpty()) {
+        if (!spec_item_match.empty()) {
+            spec_item = spec_item_match.at(0);
+        }
+        else {
+            spec_item = new QTreeWidgetItem();
+            spec_item->setData(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole, dataset_spec);
+            spec_item->setData(HELMPromptBrowser::IsPromptColumn, Qt::DisplayRole, false);
+            spec_item->setData(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole, false);
+        }
+    }
+
+    QTreeWidgetItem* parent = spec_item != nullptr ? spec_item : base_item;
+
+    const size_t instance_count = instances.array().count();
+    for (size_t i = 0; i < instance_count; ++i) {
+        const QJsonObject obj = instances.array().at(i).toObject();
+        const QString prompt = obj["input"].toObject()["text"].toString();
+
+        const bool match = matches(prompt, queries, search_is_case_sensitive);
+
+        if (!match) {
+            continue;
+        }
+
+        const QString prompt_id = obj["id"].toString();
+
+        bool prompt_is_in_tree = false;
+        const size_t number_of_prompts = parent->childCount();
+        for (int j = 0; j < number_of_prompts; ++j) {
+            QTreeWidgetItem* prompt = parent->child(j);
+            if (getPID(prompt) == prompt_id) {
+                prompt_is_in_tree = true;
+                break;
+            }
+        }
+        if (prompt_is_in_tree) {
+            continue;
+        }
+
+        QTreeWidgetItem* child = new QTreeWidgetItem();
+        child->setFlags(child->flags() | Qt::ItemIsEditable);
+        child->setBackground(HELMPromptBrowser::CIDColumn, Qt::lightGray);
+        child->setForeground(HELMPromptBrowser::NameIDColumn, Qt::darkGray);
+        child->setData(HELMPromptBrowser::CIDColumn, Qt::DisplayRole, "");
+        child->setData(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole, prompt_id);
+        child->setData(HELMPromptBrowser::DatasetSpecColumn, Qt::DisplayRole, dataset_base);
+        child->setData(HELMPromptBrowser::DatasetSpecColumn, Qt::DisplayRole, dataset_spec);
+        child->setData(HELMPromptBrowser::IsPromptColumn, Qt::DisplayRole, true);
+        child->setData(HELMPromptBrowser::PromptContentsColumn, Qt::DisplayRole, prettyPrint(obj, dataset));
+        child->setData(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole, false);
+        child->setData(HELMPromptBrowser::IsSelectedColumn, Qt::DisplayRole, false);
+        parent->addChild(child);
+    }
+
+    if (spec_item != nullptr) {
+        if (spec_item->childCount() > 0) {
+            base_item->addChild(parent);
+        }
+    }
+    if (base_item->childCount() > 0) {
+        tree->addTopLevelItem(base_item);
+    }
+}
+void deleteDatasetFromTree(const QString& dataset_name, QTreeWidget* tree)
+{
+    auto [dataset_base, dataset_spec] = splitDatasetName(dataset_name);
+
+    if (dataset_spec.isEmpty()) {
+        QList<QTreeWidgetItem *> const deletion_list = tree->findItems(dataset_base,
+                                                                       Qt::MatchExactly,
+                                                                       1);
+        for (QTreeWidgetItem* dataset : deletion_list) {
+            delete dataset;
+        }
+    }
+    else {
+        QList<QTreeWidgetItem *> const parent_list = tree->findItems(dataset_base,
+                                                                     Qt::MatchExactly,
+                                                                     1);
+        for (QTreeWidgetItem* parent : parent_list) {
+            QTreeWidgetItem* matching_child = nullptr;
+            const int child_count = parent->childCount();
+            for (int i = 0; i < child_count; ++i) {
+                if (getName(parent->child(i)) == dataset_spec) {
+                    matching_child = parent->child(i);
+                }
+            }
+            if (matching_child != nullptr) {
+                parent->removeChild(matching_child);
+                delete matching_child;
+            }
+            if (parent->childCount() == 0) {
+                delete parent;
+            }
+        }
+    }
+}
+QStringList getFiltersFromDatasetList(const QStringList& dataset_names)
+{
+    const QString operating_system = QSysInfo::productType();
+    QStringList filters;
+    for (QString dataset : dataset_names) {
+        filters.push_back(operating_system == "windows" ? dataset.replace(":", "_") + "*" : dataset + "*");
+    }
+    return filters;
+}
+QStringList getHelmTaskDirs(const QStringList& datasets, const QString& helm_data_path)
+{
+    const QStringList filters = getFiltersFromDatasetList(datasets);
+
+    QStringList task_dirs;
+
+    QDir helm_dir(helm_data_path);
+    for (const auto& filter : filters) {
+        helm_dir.setNameFilters({ filter });
+        task_dirs.push_back(helm_dir.entryList().at(0));
+    }
+
+    return task_dirs;
+}
 QStringList getSelectedDatasetNames(const QTreeWidget* tree)
 {
     QStringList selected_datasets;
@@ -118,210 +364,42 @@ QStringList getSelectedDatasetNames(const QTreeWidget* tree)
     }
     return selected_datasets;
 }
+bool has_selected_prompts(const QTreeWidgetItem* item) {
+    bool has_selected_prompts = false;
 
-QStringList getFiltersFromDatasetList(const QStringList& dataset_names)
-{
-    const QString operating_system = QSysInfo::productType();
-    QStringList filters;
-    for (QString dataset : dataset_names) {
-        filters.push_back(operating_system == "windows" ? dataset.replace(":", "_") + "*" : dataset + "*");
-    }
-    return filters;
-}
-
-void deleteDatasetFromTree(const QString& dataset_name, QTreeWidget* tree)
-{
-    auto [dataset_base, dataset_spec] = splitDatasetName(dataset_name);
-
-    if (dataset_spec.isEmpty()) {
-        QList<QTreeWidgetItem *> const deletion_list = tree->findItems(dataset_base,
-                                                                       Qt::MatchExactly,
-                                                                       1);
-        for (QTreeWidgetItem* dataset : deletion_list) {
-            delete dataset;
-        }
-    }
-    else {
-        QList<QTreeWidgetItem *> const parent_list = tree->findItems(dataset_base,
-                                                                     Qt::MatchExactly,
-                                                                     1);
-        for (QTreeWidgetItem* parent : parent_list) {
-            QTreeWidgetItem* matching_child = nullptr;
-            const int child_count = parent->childCount();
-            for (int i = 0; i < child_count; ++i) {
-                if (getName(parent->child(i)) == dataset_spec) {
-                    matching_child = parent->child(i);
-                }
-            }
-            if (matching_child != nullptr) {
-                parent->removeChild(matching_child);
-                delete matching_child;
-            }
-            if (parent->childCount() == 0) {
-                delete parent;
-            }
-        }
-    }
-}
-
-QStringList getHelmTaskDirs(const QStringList& datasets, const QString& helm_data_path)
-{
-    const QStringList filters = getFiltersFromDatasetList(datasets);
-
-    QStringList task_dirs;
-
-    QDir helm_dir(helm_data_path);
-    for (const auto& filter : filters) {
-        helm_dir.setNameFilters({ filter });
-        task_dirs.push_back(helm_dir.entryList().at(0));
-    }
-
-    return task_dirs;
-}
-
-
-QString getCID(const QTreeWidgetItem* item)
-{
-    return item->data(0, Qt::DisplayRole).toString();
-}
-
-void setCID(QTreeWidgetItem* item, const QString& cid)
-{
-    item->setData(0, Qt::DisplayRole, cid);
-}
-
-QString getPID(const QTreeWidgetItem* item)
-{
-    return item->data(1, Qt::DisplayRole).toString();
-}
-
-QString getName(const QTreeWidgetItem* item)
-{
-    return item->data(1, Qt::DisplayRole).toString();
-}
-
-QString getDatasetBase(const QTreeWidgetItem* item)
-{
-    return item->data(2, Qt::DisplayRole).toString();
-}
-
-QString getDatasetSpec(const QTreeWidgetItem* item)
-{
-    return item->data(3, Qt::DisplayRole).toString();
-}
-
-bool isPrompt(const QTreeWidgetItem* item)
-{
-    return item->data(4, Qt::DisplayRole).toBool();
-}
-
-QString getPrompt(const QTreeWidgetItem* item)
-{
-    return item->data(5, Qt::DisplayRole).toString();
-}
-
-bool hasSpecifications(const QTreeWidgetItem* item)
-{
-    return item->data(6, Qt::DisplayRole).toBool();
-}
-
-bool isSelected(const QTreeWidgetItem* item)
-{
-    return item->data(7, Qt::DisplayRole).toBool();
-}
-
-void setSelectedStatus(QTreeWidgetItem* item, bool status)
-{
-    item->setData(7, Qt::DisplayRole, status);
-    if (status) {
-        item->setForeground(1, Qt::black);
-        item->setBackground(0, Qt::blue);
-        item->setForeground(0, Qt::white);
-    }
-    else {
-        item->setForeground(1, Qt::darkGray);
-        item->setBackground(0, Qt::lightGray);
-        item->setForeground(0, Qt::black);
-    }
-}
-
-QJsonObject getSamples(const QTreeWidgetItem* item)
-{
-    QJsonObject samples;
-
-    const int child_count = item->childCount();
-    for (int i = 0; i < child_count; ++i) {
-        const QTreeWidgetItem* child = item->child(i);
-        if (child->data(7, Qt::DisplayRole).toBool()) {
-            samples.insert(getPID(child), getCID(child));
+    const size_t prompt_count = item->childCount();
+    for (size_t i = 0; i < prompt_count; ++i) {
+        if (isSelected(item->child(i))) {
+            has_selected_prompts = true;
+            break;
         }
     }
 
-    return samples;
+    return has_selected_prompts;
 }
+bool matches(const QString& prompt, const QList<QPair<QStringList, QStringList>>& queries, const bool case_sensitivity) {
+    const auto prompt_matches_term = [&](const QString& term) { return prompt.contains(term, (case_sensitivity ? Qt::CaseSensitive : Qt::CaseInsensitive));};
+    bool match = false;
 
-QJsonObject getDatasetObj(const QTreeWidgetItem* item, const QString& dataset_base, const QString& dataset_spec, const QJsonObject& helm_data_json)
-{
-    QString metric;
-    QString split;
-
-    QString dataset_name = dataset_base;
-    if (!dataset_spec.isEmpty()) {
-        dataset_name += ":" + dataset_spec;
-    }
-    for (const auto& array : helm_data_json) {
-        for (auto&& obj : array.toArray()) {
-            if (obj.toObject()["name"] != dataset_name) {
-                continue;
-            }
-            metric = obj.toObject()["metric"].toString();
-            split = obj.toObject()["split"].toString();
+    for (const auto& query : queries) {
+        const auto& [inclusions, exclusions] = query;
+        const bool matches_all_inclusions = std::ranges::all_of(inclusions, prompt_matches_term);
+        const bool matches_some_exclusion = std::ranges::any_of(exclusions, prompt_matches_term);
+        if (!matches_all_inclusions || matches_some_exclusion) {
+            continue;
         }
+        match = true;
+        break;
     }
 
-    QJsonObject dataset_specification;
-    QJsonObject const samples = getSamples(item);
-    dataset_specification.insert("dataset_spec", dataset_spec);
-    dataset_specification.insert("metric", metric);
-    dataset_specification.insert("split", split);
-    dataset_specification.insert("samples", samples);
-
-    QJsonObject dataset;
-    dataset.insert(dataset_base, dataset_specification);
-
-    return dataset;
+    return match;
 }
-
-QJsonObject loadHelmDataConfig(const QString& helm_data_json)
-{
-    QFile helm_data_json_file(helm_data_json);
-    if (!helm_data_json_file.open(QIODevice::ReadOnly)) {
-        return {};
-    }
-    const QJsonDocument helm_dataset_config = QJsonDocument::fromJson(helm_data_json_file.readAll());
-
-    return helm_dataset_config.toVariant().toJsonObject();
-}
-
-QJsonDocument getTaskInstances(const QString& task_dir, const QString& helm_data_path)
-{
-    QFile instances_file(helm_data_path + "/" + task_dir + "/instances.json");
-    if (!instances_file.open(QIODevice::ReadOnly)) {
-        QMessageBox msg;
-        msg.setText("Failed to open instances.json from " + task_dir);
-        msg.exec();
-        return {};
-    }
-    return QJsonDocument::fromJson(instances_file.readAll());
-}
-
 QPair<QString, QString> splitDatasetName(const QString& dataset)
 {
     QString dataset_base;
     QString dataset_spec;
 
-    if (dataset == "bold:subject=all" || dataset == "boolq:only_contrast=True" || dataset == "imdb:only_contrast=True")
-    {
+    if (dataset == "bold:subject=all" || dataset == "boolq:only_contrast=True" || dataset == "imdb:only_contrast=True") {
         dataset_base = dataset;
         dataset_spec = {};
     }
@@ -340,131 +418,22 @@ QPair<QString, QString> splitDatasetName(const QString& dataset)
 
     return {dataset_base, dataset_spec};
 }
-
-bool has_selected_prompts(const QTreeWidgetItem* item) {
-    bool has_selected_prompts = false;
-
-    const size_t prompt_count = item->childCount();
-    for (size_t i = 0; i < prompt_count; ++i) {
-        if (isSelected(item->child(i))) {
-            has_selected_prompts = true;
-            break;
-        }
-    }
-
-    return has_selected_prompts;
-}
-
-void addPromptsToTree(const QString& dataset,
-                      const QJsonDocument& instances,
-                      const QList<QPair<QStringList, QStringList>>& queries,
-                      bool search_is_case_sensitive,
-                      QTreeWidget* tree)
+void transformDatasetTree(QTreeWidget* dataset_tree, const std::function<void(QTreeWidgetItem*)>& transformation)
 {
-    auto [dataset_base, dataset_spec] = splitDatasetName(dataset);
-
-    QList<QTreeWidgetItem *> const base_item_match = tree->findItems(dataset_base,
-                                                                     Qt::MatchExactly,
-                                                                     1);
-    QList<QTreeWidgetItem*> spec_item_match;
-
-    if (!dataset_spec.isEmpty()) {
-        spec_item_match = tree->findItems(dataset_spec, Qt::MatchExactly | Qt::MatchRecursive, 1);
-    }
-
-    QTreeWidgetItem* base_item = nullptr;
-
-    if (!base_item_match.empty()) {
-        base_item = base_item_match.at(0);
-    }
-    else {
-        base_item = new QTreeWidgetItem();
-        base_item->setData(1, Qt::DisplayRole, dataset_base);
-        base_item->setData(4, Qt::DisplayRole, false);
-        if (dataset_spec.isEmpty()) {
-            base_item->setData(6, Qt::DisplayRole, false);
-        }
-        else {
-            base_item->setData(6, Qt::DisplayRole, true);
-        }
-    }
-
-    QTreeWidgetItem* spec_item = nullptr;
-    if (!dataset_spec.isEmpty()) {
-        if (!spec_item_match.empty()) {
-            spec_item = spec_item_match.at(0);
-        }
-        else {
-            spec_item = new QTreeWidgetItem();
-            spec_item->setData(1, Qt::DisplayRole, dataset_spec);
-            spec_item->setData(4, Qt::DisplayRole, false);
-            spec_item->setData(6, Qt::DisplayRole, false);
-        }
-    }
-
-    QTreeWidgetItem* parent = spec_item != nullptr ? spec_item : base_item;
-
-    const int instance_count = instances.array().count();
-    for (int i = 0; i < instance_count; ++i) {
-        const QJsonObject obj = instances.array().at(i).toObject();
-        const QString prompt = obj["input"].toObject()["text"].toString();
-
-        const bool match = matches(prompt, queries, search_is_case_sensitive);
-
-        if (!match) {
+    const size_t dataset_count = dataset_tree->topLevelItemCount();
+    for (size_t i = 0; i < dataset_count; ++i) {
+        QTreeWidgetItem* dataset = dataset_tree->topLevelItem(i);
+        if (dataset->childCount() == 0) {
+            transformation(dataset);
             continue;
         }
-
-        const QString prompt_id = obj["id"].toString();
-
-        bool prompt_is_in_tree = false;
-        const size_t number_of_prompts = parent->childCount();
-        for (int j = 0; j < number_of_prompts; ++j) {
-            QTreeWidgetItem* prompt = parent->child(j);
-            if (getPID(prompt) == prompt_id) {
-                prompt_is_in_tree = true;
-                break;
-            }
+        const size_t specification_count = dataset->childCount();
+        for (size_t j = 0; j < specification_count; ++j) {
+            transformation(dataset->child(j));
         }
-        if (prompt_is_in_tree) {
-            continue;
-        }
-
-        QTreeWidgetItem* child = new QTreeWidgetItem();
-        child->setFlags(child->flags() | Qt::ItemIsEditable);
-        child->setBackground(0, Qt::lightGray);
-        child->setForeground(1, Qt::darkGray);
-        child->setData(0, Qt::DisplayRole, "");
-        child->setData(1, Qt::DisplayRole, prompt_id);
-        child->setData(2, Qt::DisplayRole, dataset_base);
-        child->setData(3, Qt::DisplayRole, dataset_spec);
-        child->setData(4, Qt::DisplayRole, true);
-        child->setData(5, Qt::DisplayRole, prettyPrint(obj, dataset));
-        child->setData(6, Qt::DisplayRole, false);
-        child->setData(7, Qt::DisplayRole, false);
-        parent->addChild(child);
-    }
-
-    if (spec_item != nullptr) {
-        if (spec_item->childCount() > 0) {
-            base_item->addChild(parent);
-        }
-    }
-    if (base_item->childCount() > 0) {
-        tree->addTopLevelItem(base_item);
     }
 }
-
-void PopUp(const QString& message)
-{
-    QMessageBox msgBox;
-    msgBox.setText(message);
-    msgBox.setStandardButtons(QMessageBox::NoButton);
-    QTimer::singleShot(1500, &msgBox, &QMessageBox::accept);
-    msgBox.exec();
-}
-
-void transformPromptTree(QTreeWidget* prompt_tree, std::function<void(QTreeWidgetItem*)> transformation)
+void transformPromptTree(QTreeWidget* prompt_tree, const std::function<void(QTreeWidgetItem*)>& transformation)
 {
     const size_t dataset_count = prompt_tree->topLevelItemCount();
     for (size_t i = 0; i < dataset_count; ++i) {
@@ -490,38 +459,66 @@ void transformPromptTree(QTreeWidget* prompt_tree, std::function<void(QTreeWidge
     }
 }
 
-void transformDatasetTree(QTreeWidget* dataset_tree, std::function<void(QTreeWidgetItem*)> transformation)
+
+/****************************
+ * Prompt-related functions *
+ ***************************/
+
+QString getCID(const QTreeWidgetItem* item)
 {
-    const size_t dataset_count = dataset_tree->topLevelItemCount();
-    for (size_t i = 0; i < dataset_count; ++i) {
-        QTreeWidgetItem* dataset = dataset_tree->topLevelItem(i);
-        if (dataset->childCount() == 0) {
-            transformation(dataset);
-            continue;
-        }
-        const size_t specification_count = dataset->childCount();
-        for (size_t j = 0; j < specification_count; ++j) {
-            transformation(dataset->child(j));
-        }
-    }
+    return item->data(HELMPromptBrowser::CIDColumn, Qt::DisplayRole).toString();
 }
-
-bool matches(const QString& prompt, const QList<QPair<QStringList, QStringList>>& queries, const bool case_sensitivity) {
-    const auto prompt_matches_term = [&](const QString& term) { return prompt.contains(term, (case_sensitivity ? Qt::CaseSensitive : Qt::CaseInsensitive));};
-    bool match = false;
-
-    for (const auto& query : queries) {
-        const auto& [inclusions, exclusions] = query;
-        const bool matches_all_inclusions = std::ranges::all_of(inclusions, prompt_matches_term);
-        const bool matches_some_exclusion = std::ranges::any_of(exclusions, prompt_matches_term);
-        if (!matches_all_inclusions || matches_some_exclusion) {
-            continue;
-        }
-        else {
-            match = true;
-            break;
-        }
+QString getDatasetBase(const QTreeWidgetItem* item)
+{
+    return item->data(HELMPromptBrowser::DatasetBaseColumn, Qt::DisplayRole).toString();
+}
+QString getDatasetSpec(const QTreeWidgetItem* item)
+{
+    return item->data(HELMPromptBrowser::DatasetSpecColumn, Qt::DisplayRole).toString();
+}
+QString getName(const QTreeWidgetItem* item)
+{
+    return item->data(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole).toString();
+}
+QString getPID(const QTreeWidgetItem* item)
+{
+    return item->data(HELMPromptBrowser::NameIDColumn, Qt::DisplayRole).toString();
+}
+QString getPrompt(const QTreeWidgetItem* item)
+{
+    return item->data(HELMPromptBrowser::PromptContentsColumn, Qt::DisplayRole).toString();
+}
+QString getReferences(const QTreeWidgetItem* item)
+{
+    return item->data(HELMPromptBrowser::ReferencesColumn, Qt::DisplayRole).toString();
+}
+bool hasSpecifications(const QTreeWidgetItem* item)
+{
+    return item->data(HELMPromptBrowser::HasSpecificationsColumn, Qt::DisplayRole).toBool();
+}
+bool isPrompt(const QTreeWidgetItem* item)
+{
+    return item->data(HELMPromptBrowser::IsPromptColumn, Qt::DisplayRole).toBool();
+}
+bool isSelected(const QTreeWidgetItem* item)
+{
+    return item->data(HELMPromptBrowser::IsSelectedColumn, Qt::DisplayRole).toBool();
+}
+void setCID(QTreeWidgetItem* item, const QString& cid)
+{
+    item->setData(HELMPromptBrowser::CIDColumn, Qt::DisplayRole, cid);
+}
+void setSelectedStatus(QTreeWidgetItem* item, bool status)
+{
+    item->setData(HELMPromptBrowser::IsSelectedColumn, Qt::DisplayRole, status);
+    if (status) {
+        item->setForeground(HELMPromptBrowser::NameIDColumn, Qt::black);
+        item->setBackground(HELMPromptBrowser::CIDColumn, Qt::blue);
+        item->setForeground(HELMPromptBrowser::CIDColumn, Qt::white);
     }
-
-    return match;
+    else {
+        item->setForeground(HELMPromptBrowser::NameIDColumn, Qt::darkGray);
+        item->setBackground(HELMPromptBrowser::CIDColumn, Qt::lightGray);
+        item->setForeground(HELMPromptBrowser::CIDColumn, Qt::black);
+    }
 }

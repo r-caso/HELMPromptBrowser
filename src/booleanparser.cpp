@@ -1,5 +1,7 @@
-#include "booleanParser.hpp"
+#include "booleanparser.hpp"
 
+#include <cctype>
+#include <memory>
 #include <stack>
 
 BooleanParser::BooleanParser()
@@ -22,9 +24,9 @@ void BooleanParser::advance()
     }
 }
 
-bool BooleanParser::expect(TokenType s)
+bool BooleanParser::expect(TokenType type)
 {
-    if (m_Sym == s)
+    if (m_Sym == type)
     {
         advance();
         return true;
@@ -104,63 +106,44 @@ void BooleanParser::tokenize(const std::string& formula)
     std::stack<char> symbol_stack;
 
     for (char const c : formula) {
-        if (!isalpha(c) && ident.size() > 0)
-        {
+        if (!isalpha(c) && !ident.empty()) {
             if (!symbol_stack.empty()) {
                 continue;
             }
             m_TokenList.push_back({ ident, TokenType::IDENTIFIER });
             ident.clear();
         }
-        if (isalpha(c))
-        {
+        if (isalpha(c)) {
             ident.push_back(c);
         }
-        else if (c == ' ')
-        {
+        else if (c == ' ') {
             if (symbol_stack.empty()) {
                 continue;
             }
-            else {
-                ident.push_back(c);
-            }
-        }
-        else if (c == '"') {
+            ident.push_back(c);
+        } else if (c == '"') {
             if (symbol_stack.empty()) {
                 symbol_stack.push(c);
             }
             else {
                 symbol_stack.pop();
             }
-        }
-        else if (c == '(')
-        {
+        } else if (c == '(') {
             m_TokenList.push_back({ std::string(1, c), TokenType::LPAREN });
-        }
-        else if (c == ')')
-        {
+        } else if (c == ')') {
             m_TokenList.push_back({ std::string(1, c), TokenType::RPAREN });
-        }
-        else if (c == '!')
-        {
+        } else if (c == '!') {
             m_TokenList.push_back({ std::string(1, c), TokenType::NOT });
-        }
-        else if (c == '|')
-        {
+        } else if (c == '|') {
             m_TokenList.push_back({ std::string(1, c), TokenType::OR });
-        }
-        else if (c == '&')
-        {
+        } else if (c == '&') {
             m_TokenList.push_back({ std::string(1, c), TokenType::AND });
-        }
-        else
-        {
+        } else {
             m_TokenList.push_back({ std::string(1, c), TokenType::ILLEGAL });
         }
     }
 
-    if (ident.size() > 0)
-    {
+    if (!ident.empty()) {
         m_TokenList.push_back({ ident, TokenType::IDENTIFIER });
     }
 

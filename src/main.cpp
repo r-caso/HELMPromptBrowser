@@ -7,13 +7,13 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication const a(argc, argv);
+    QApplication const app(argc, argv);
     if (QSysInfo::productType() != "macos") {
         QApplication::setStyle("fusion");
     }
-    MainWindow w;
-    const auto screenSize = w.screen()->availableSize();
-    w.resize({screenSize.width(), screenSize.height()});
-    w.show();
-    return a.exec();
+    MainWindow window;
+    const auto screenSize = window.screen()->availableSize();
+    window.resize({screenSize.width(), screenSize.height()});
+    window.show();
+    return app.exec();
 }

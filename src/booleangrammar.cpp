@@ -53,7 +53,7 @@ bool parse(const std::string& query, AST& parsetree)
     if (begin != end) {
         return false;
     }
-    return true;
+    return result;
 }
 
 bool checkQuery(const std::string& query)

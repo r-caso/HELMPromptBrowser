@@ -51,6 +51,7 @@ class BooleanGrammar : public qi::grammar<std::string::const_iterator, AST()> {
 public:
     BooleanGrammar();
 
+private:
     qi::rule<std::string::const_iterator, AST()> start;
     qi::rule<std::string::const_iterator, AST(), ascii::space_type> disjunction, conjunction, negation;
     qi::rule<std::string::const_iterator, std::string()> term;

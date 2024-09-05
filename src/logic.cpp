@@ -1,38 +1,23 @@
 #include "logic.hpp"
 
-#include <numeric>
-
 bool isAtomic(const Expression& expr)
 {
     return expr.op == Operator::NIL;
 }
-bool isAtomic(std::shared_ptr<Expression> expr)
-{
-    return expr->op == Operator::NIL;
-}
+
 bool isConjunction(const Expression& expr)
 {
     return expr.op == Operator::AND;
 }
-bool isConjunction(std::shared_ptr<Expression> expr)
-{
-    return expr->op == Operator::AND;
-}
+
 bool isDisjunction(const Expression& expr)
 {
     return expr.op == Operator::OR;
 }
-bool isDisjunction(std::shared_ptr < Expression> expr)
-{
-    return expr->op == Operator::OR;
-}
+
 bool isNegation(const Expression& expr)
 {
     return expr.op == Operator::NOT;
-}
-bool isNegation(std::shared_ptr<Expression> expr)
-{
-    return expr->op == Operator::NOT;
 }
 
 static bool noOr(const Expression& expr) {
@@ -47,6 +32,7 @@ static bool noOr(const Expression& expr) {
     }
     return noOr(*expr.child(0)) && noOr(*expr.child(1));
 }
+
 static bool noAndAboveOr(const Expression& expr)
 {
     if (isAtomic(expr)) {
@@ -60,6 +46,7 @@ static bool noAndAboveOr(const Expression& expr)
     }
     return noOr(*expr.child(0)) && noOr(*expr.child(1));
 }
+
 static Expression distributeAndOr(const Expression& expr1, const Expression& expr2)
 {
     if (isDisjunction(expr1)) {
@@ -83,7 +70,7 @@ bool isNNF(const Expression& expr)
         return true;
     }
     if (isNegation(expr)) {
-        return isAtomic(expr.child(0));
+        return isAtomic(*expr.child(0));
     }
     return isNNF(*expr.child(0)) && isNNF(*expr.child(1));
 }
@@ -99,15 +86,15 @@ Expression toNNF(const Expression& expr)
         return expr;
     }
     if (isNegation(expr)) {
-        std::shared_ptr<Expression> const scope = expr.child(0);
+        const Expression* scope = expr.child(0);
 
-        if (isAtomic(scope)) {
+        if (isAtomic(*scope)) {
             return expr;
         }
-        if (isNegation(scope)) {
+        if (isNegation(*scope)) {
             return toNNF(*scope->child(0));
         }
-        if (isDisjunction(scope)) {
+        if (isDisjunction(*scope)) {
             Expression conjunction(Operator::AND);
             Expression lhs(Operator::NOT);
             lhs.addOperand(toNNF(*scope->child(0)));
@@ -116,7 +103,7 @@ Expression toNNF(const Expression& expr)
             conjunction.addOperands({ lhs, rhs });
             return conjunction;
         }
-        if (isConjunction(scope)) {
+        if (isConjunction(*scope)) {
             Expression disjunction(Operator::OR);
             Expression lhs(Operator::NOT);
             lhs.addOperand(toNNF(*scope->child(0)));

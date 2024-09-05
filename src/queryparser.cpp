@@ -8,7 +8,7 @@
 #include <boost/variant.hpp>
 
 #include "booleangrammar.hpp"
-#include "booleanParser.hpp"
+#include "booleanparser.hpp"
 #include "logic.hpp"
 
 bool checkQuery(const QString& query)
@@ -65,12 +65,12 @@ static std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>
         return { get_inclusion_exclusion_lists(expression) };
     }
 
-    if (isConjunction(expression.child(0))) {
+    if (isConjunction(*expression.child(0))) {
         std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> queries = getQueries(*expression.child(1));
         queries.push_back(get_inclusion_exclusion_lists(*expression.child(0)));
         return queries;
     }
-    if (isConjunction(expression.child(1))) {
+    if (isConjunction(*expression.child(1))) {
         std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> queries = getQueries(*expression.child(0));
         queries.push_back(get_inclusion_exclusion_lists(*expression.child(1)));
         return queries;
