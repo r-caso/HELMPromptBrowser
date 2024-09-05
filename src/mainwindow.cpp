@@ -41,25 +41,16 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->HELM_Data_lineEdit->setText(m_helmDataPath);
 
-    ui->prompts_treeWidget->setColumnCount(HELMPromptBrowser::PromptTreeColumnCount);
-    ui->prompts_treeWidget->setHeaderLabels({"Custom Dataset ID", "Dataset name / Prompt ID", "Dataset_base", "Dataset_spec", "IsPrompt", "Prompt", "HasSpecs", "Selected"});
-    ui->prompts_treeWidget->setColumnWidth(HELMPromptBrowser::CIDColumn, 120);
-    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::DatasetBaseColumn);
-    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::DatasetSpecColumn);
-    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::IsPromptColumn);
-    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::PromptContentsColumn);
-    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::ReferencesColumn);
-    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::HasSpecificationsColumn);
-    ui->prompts_treeWidget->hideColumn(HELMPromptBrowser::IsSelectedColumn);
-    ui->prompts_treeWidget->header()->setStretchLastSection(true);
-    ui->prompts_treeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    /***********************
+     * Set up dataset tree *
+     ***********************/
 
     const std::map<QString, QList<QPair<QString, int>>> HELM_hierarchy = {
         {
             "babi_qa", QList({
                 std::make_pair(QString("babi_qa:task=15"), 69),
                 std::make_pair(QString("babi_qa:task=19"), 69),
-                std::make_pair(QString("babi_qa:task=3"),  69),
+                std::make_pair(QString("babi_qa:task=3"), 69),
                 std::make_pair(QString("babi_qa:task=all"), 69),
             })
         },
@@ -72,17 +63,17 @@ MainWindow::MainWindow(QWidget *parent)
         },
         {
             "blimp", QList({
-                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_joint"),6),
-                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_joint"), 6),
+                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_separate_calibrated"), 6),
                 std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_separate_original"), 32),
-                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_joint"),6),
-                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_calibrated"),6),
-                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_original"),32),
-                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_joint"),6),
-                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_joint"), 6),
+                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_original"), 32),
+                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_joint"), 6),
+                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_separate_calibrated"), 6),
                 std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_separate_original"), 32),
-                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_joint"),6),
-                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_separate_calibrated"),6),
+                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_joint"), 6),
+                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_separate_calibrated"), 6),
                 std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_separate_original"), 32),
             })
         },
@@ -106,12 +97,12 @@ MainWindow::MainWindow(QWidget *parent)
                 std::make_pair(QString("civil_comments:demographic=LGBTQ"), 66),
                 std::make_pair(QString("civil_comments:demographic=all"), 66),
                 std::make_pair(QString("civil_comments:demographic=black"), 66),
-                std::make_pair(QString("civil_comments:demographic=christian"),66),
+                std::make_pair(QString("civil_comments:demographic=christian"), 66),
                 std::make_pair(QString("civil_comments:demographic=female"), 66),
                 std::make_pair(QString("civil_comments:demographic=male"), 66),
                 std::make_pair(QString("civil_comments:demographic=muslim"), 66),
-                std::make_pair(QString("civil_comments:demographic=other_religions"),66),
-                std::make_pair(QString("civil_comments:demographic=white"),66),
+                std::make_pair(QString("civil_comments:demographic=other_religions"), 66),
+                std::make_pair(QString("civil_comments:demographic=white"), 66),
             })
         },
         {
@@ -123,7 +114,7 @@ MainWindow::MainWindow(QWidget *parent)
         {
             "commonsense", QList({
                 std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_joint"), 6),
-                std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_separate_calibrated"),  6),
+                std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_separate_calibrated"), 6),
                 std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_separate_original"), 32),
                 std::make_pair(QString("commonsense:dataset=openbookqa,method=multiple_choice_joint"), 6),
                 std::make_pair(QString("commonsense:dataset=openbookqa,method=multiple_choice_separate_calibrated"), 32),
@@ -136,7 +127,7 @@ MainWindow::MainWindow(QWidget *parent)
                 std::make_pair(QString("copyright:datatag=oh_the_places"), 10),
                 std::make_pair(QString("copyright:datatag=popular_books-prefix_length_125.json"), 42),
                 std::make_pair(QString("copyright:datatag=prompt_num_line_1-min_lines_20.json"), 2),
-                std::make_pair(QString("copyright:datatag=prompt_num_line_10-min_lines_20.json"),2),
+                std::make_pair(QString("copyright:datatag=prompt_num_line_10-min_lines_20.json"), 2),
             })
         },
         {
@@ -171,12 +162,12 @@ MainWindow::MainWindow(QWidget *parent)
         },
         {
             "ice", QList({
-                std::make_pair(QString("ice:gender=female"),32),
-                std::make_pair(QString("ice:gender=male"),32),
-                std::make_pair(QString("ice:subset=ea"),32),
-                std::make_pair(QString("ice:subset=hk"),32),
-                std::make_pair(QString("ice:subset=ind"),32),
-                std::make_pair(QString("ice:subset=usa"),32),
+                std::make_pair(QString("ice:gender=female"), 32),
+                std::make_pair(QString("ice:gender=male"), 32),
+                std::make_pair(QString("ice:subset=ea"), 32),
+                std::make_pair(QString("ice:subset=hk"), 32),
+                std::make_pair(QString("ice:subset=ind"), 32),
+                std::make_pair(QString("ice:subset=usa"), 32),
             })
         },
         {
@@ -193,7 +184,7 @@ MainWindow::MainWindow(QWidget *parent)
             "legal_support", QList({
                 std::make_pair(QString("legal_support,method=multiple_choice_joint"), 68),
                 std::make_pair(QString("legal_support,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("legal_support,method=multiple_choice_separate_original"),6),
+                std::make_pair(QString("legal_support,method=multiple_choice_separate_original"), 6),
             })
         },
         {
@@ -223,27 +214,27 @@ MainWindow::MainWindow(QWidget *parent)
         },
         {
             "mmlu", QList({
-                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_joint"),66),
-                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_calibrated"),6),
-                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_original"),6),
-                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_joint"),66),
-                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_calibrated"),6),
-                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_original"),6),
-                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_joint"),66),
-                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_separate_calibrated"),6),
-                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_separate_original"),6),
-                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_joint"),66),
-                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_separate_calibrated"),6),
-                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_separate_original"),6),
-                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_joint"),66),
-                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_calibrated"),6),
-                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_original"),6),
+                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_joint"), 66),
+                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_original"), 6),
+                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_joint"), 66),
+                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_original"), 6),
+                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_joint"), 66),
+                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_separate_original"), 6),
+                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_joint"), 66),
+                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_separate_original"), 6),
+                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_joint"), 66),
+                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_original"), 6),
             })
         },
         {
             "msmarco", QList({
-                std::make_pair(QString("msmarco:track=regular,valid_topk=30"),32),
-                std::make_pair(QString("msmarco:track=trec,valid_topk=30"),32),
+                std::make_pair(QString("msmarco:track=regular,valid_topk=30"), 32),
+                std::make_pair(QString("msmarco:track=trec,valid_topk=30"), 32),
             })
         },
         {
@@ -264,17 +255,17 @@ MainWindow::MainWindow(QWidget *parent)
         },
         {
             "raft", QList({
-                std::make_pair(QString("raft:subset=ade_corpus_v2"),66),
-                std::make_pair(QString("raft:subset=banking_77"),66),
-                std::make_pair(QString("raft:subset=neurips_impact_statement_risks"),66),
-                std::make_pair(QString("raft:subset=one_stop_english"),66),
-                std::make_pair(QString("raft:subset=overruling"),66),
-                std::make_pair(QString("raft:subset=semiconductor_org_types"),66),
-                std::make_pair(QString("raft:subset=systematic_review_inclusion"),66),
-                std::make_pair(QString("raft:subset=tai_safety_research"),66),
-                std::make_pair(QString("raft:subset=terms_of_service"),66),
-                std::make_pair(QString("raft:subset=tweet_eval_hate"),66),
-                std::make_pair(QString("raft:subset=twitter_complaints"),66),
+                std::make_pair(QString("raft:subset=ade_corpus_v2"), 66),
+                std::make_pair(QString("raft:subset=banking_77"), 66),
+                std::make_pair(QString("raft:subset=neurips_impact_statement_risks"), 66),
+                std::make_pair(QString("raft:subset=one_stop_english"), 66),
+                std::make_pair(QString("raft:subset=overruling"), 66),
+                std::make_pair(QString("raft:subset=semiconductor_org_types"), 66),
+                std::make_pair(QString("raft:subset=systematic_review_inclusion"), 66),
+                std::make_pair(QString("raft:subset=tai_safety_research"), 66),
+                std::make_pair(QString("raft:subset=terms_of_service"), 66),
+                std::make_pair(QString("raft:subset=tweet_eval_hate"), 66),
+                std::make_pair(QString("raft:subset=twitter_complaints"), 66),
             })
         },
         {
@@ -301,101 +292,112 @@ MainWindow::MainWindow(QWidget *parent)
         },
         {
             "synthetic_reasoning", QList({
-                std::make_pair(QString("synthetic_reasoning:mode=induction"),68),
-                std::make_pair(QString("synthetic_reasoning:mode=pattern_match"),68),
-                std::make_pair(QString("synthetic_reasoning:mode=variable_substitution"),68),
+                std::make_pair(QString("synthetic_reasoning:mode=induction"), 68),
+                std::make_pair(QString("synthetic_reasoning:mode=pattern_match"), 68),
+                std::make_pair(QString("synthetic_reasoning:mode=variable_substitution"), 68),
             })
         },
         {
             "synthetic_reasoning_natural", QList({
-                std::make_pair(QString("synthetic_reasoning_natural:difficulty=easy"),68),
-                std::make_pair(QString("synthetic_reasoning_natural:difficulty=hard"),68),
+                std::make_pair(QString("synthetic_reasoning_natural:difficulty=easy"), 68),
+                std::make_pair(QString("synthetic_reasoning_natural:difficulty=hard"), 68),
             })
         },
         {
             "the_pile", QList({
-                std::make_pair(QString("the_pile:subset=ArXiv"),24),
-                std::make_pair(QString("the_pile:subset=BookCorpus2"),32),
-                std::make_pair(QString("the_pile:subset=Enron Emails"),32),
-                std::make_pair(QString("the_pile:subset=Github"),24),
-                std::make_pair(QString("the_pile:subset=PubMed Central"),24),
-                std::make_pair(QString("the_pile:subset=Wikipedia (en)"),32),
+                std::make_pair(QString("the_pile:subset=ArXiv"), 24),
+                std::make_pair(QString("the_pile:subset=BookCorpus2"), 32),
+                std::make_pair(QString("the_pile:subset=Enron Emails"), 32),
+                std::make_pair(QString("the_pile:subset=Github"), 24),
+                std::make_pair(QString("the_pile:subset=PubMed Central"), 24),
+                std::make_pair(QString("the_pile:subset=Wikipedia (en)"), 32),
             })
         },
         {
             "truthful_qa", QList({
-                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_joint"),66),
-                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_calibrated"),6),
-                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_original"),6),
+                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_joint"), 66),
+                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_calibrated"), 6),
+                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_original"), 6),
             })
         },
         {
             "twitter_aae", QList({
-                std::make_pair(QString("twitter_aae:demographic=aa"),32),
-                std::make_pair(QString("twitter_aae:demographic=white"),32),
+                std::make_pair(QString("twitter_aae:demographic=aa"), 32),
+                std::make_pair(QString("twitter_aae:demographic=white"), 32),
             })
         },
         {
             "wikifact", QList({
-                std::make_pair(QString("wikifact:k=5,subject=author"),66),
-                std::make_pair(QString("wikifact:k=5,subject=currency"),66),
-                std::make_pair(QString("wikifact:k=5,subject=discoverer_or_inventor"),66),
-                std::make_pair(QString("wikifact:k=5,subject=instance_of"),66),
-                std::make_pair(QString("wikifact:k=5,subject=medical_condition_treated"),66),
-                std::make_pair(QString("wikifact:k=5,subject=part_of"),65),
-                std::make_pair(QString("wikifact:k=5,subject=place_of_birth"),66),
-                std::make_pair(QString("wikifact:k=5,subject=plaintiff"),66),
-                std::make_pair(QString("wikifact:k=5,subject=position_held"),66),
-                std::make_pair(QString("wikifact:k=5,subject=symptoms_and_signs"),66),
+                std::make_pair(QString("wikifact:k=5,subject=author"), 66),
+                std::make_pair(QString("wikifact:k=5,subject=currency"), 66),
+                std::make_pair(QString("wikifact:k=5,subject=discoverer_or_inventor"), 66),
+                std::make_pair(QString("wikifact:k=5,subject=instance_of"), 66),
+                std::make_pair(QString("wikifact:k=5,subject=medical_condition_treated"), 66),
+                std::make_pair(QString("wikifact:k=5,subject=part_of"), 65),
+                std::make_pair(QString("wikifact:k=5,subject=place_of_birth"), 66),
+                std::make_pair(QString("wikifact:k=5,subject=plaintiff"), 66),
+                std::make_pair(QString("wikifact:k=5,subject=position_held"), 66),
+                std::make_pair(QString("wikifact:k=5,subject=symptoms_and_signs"), 66),
             })
         }
     };
 
-    ui->dataset_treeWidget->setColumnCount(HELMPromptBrowser::DatasetTreeColumnCount);
-    ui->dataset_treeWidget->hideColumn(HELMPromptBrowser::NumberOfModelsPerDatasetColumn);
+    ui->dataset_treeWidget->setColumnCount(HELMPromptBrowser::DTColumnCount);
+    ui->dataset_treeWidget->hideColumn(HELMPromptBrowser::DTNumberOfModelsPerDatasetColumn);
 
     for (const auto& [task, sub_task_number_of_models] : HELM_hierarchy) {
         QTreeWidgetItem* item = new QTreeWidgetItem();
-        item->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Unchecked);
+        item->setCheckState(HELMPromptBrowser::DTDatasetNameColumn, Qt::Unchecked);
         item->setFlags(item->flags() | Qt::ItemIsAutoTristate);
-        item->setData(HELMPromptBrowser::DatasetNameColumn, Qt::DisplayRole, task);
+        item->setData(HELMPromptBrowser::DTDatasetNameColumn, Qt::DisplayRole, task);
         for (const auto& [sub_task, number_of_models]  : sub_task_number_of_models) {
             if (sub_task.isEmpty()) {
-                item->setData(HELMPromptBrowser::NumberOfModelsPerDatasetColumn, Qt::DisplayRole, number_of_models);
+                item->setData(HELMPromptBrowser::DTNumberOfModelsPerDatasetColumn, Qt::DisplayRole, number_of_models);
                 continue;
             }
             QTreeWidgetItem* child = new QTreeWidgetItem();
-            child->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Unchecked);
-            child->setData(HELMPromptBrowser::DatasetNameColumn, Qt::DisplayRole, sub_task);
-            child->setData(HELMPromptBrowser::NumberOfModelsPerDatasetColumn, Qt::DisplayRole, number_of_models);
+            child->setCheckState(HELMPromptBrowser::DTDatasetNameColumn, Qt::Unchecked);
+            child->setData(HELMPromptBrowser::DTDatasetNameColumn, Qt::DisplayRole, sub_task);
+            child->setData(HELMPromptBrowser::DTNumberOfModelsPerDatasetColumn, Qt::DisplayRole, number_of_models);
             item->addChild(child);
         }
         ui->dataset_treeWidget->addTopLevelItem(item);
     }
 
+    /**********************
+     * Set up prompt tree *
+     **********************/
+
+    ui->prompts_treeWidget->setColumnCount(HELMPromptBrowser::PTColumnCount);
+    ui->prompts_treeWidget->setHeaderLabels({"Custom Dataset ID", "Dataset name / Prompt ID"});
+    for (int i = HELMPromptBrowser::PTDatasetBaseColumn; i < HELMPromptBrowser::PTColumnCount; ++i) {
+        ui->prompts_treeWidget->hideColumn(i);
+    }
+    ui->prompts_treeWidget->setColumnWidth(HELMPromptBrowser::PTCIDColumn, 120);
+    ui->prompts_treeWidget->header()->setStretchLastSection(true);
+    ui->prompts_treeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+    /*********************
+     * Editing shortcuts *
+     *********************/
+
     QShortcut* delete_shortcut1 = new QShortcut(QKeySequence(Qt::Key_Delete), ui->prompts_treeWidget);
     connect(delete_shortcut1, SIGNAL(activated()), this, SLOT(on_delete_pushButton_clicked()));
-
     QShortcut* undo_shortcut_1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Z), ui->prompts_treeWidget);
     connect(undo_shortcut_1, SIGNAL(activated()), this, SLOT(on_undo_pushButton_clicked()));
-
     QShortcut* redo_shortcut_1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Y), ui->prompts_treeWidget);
     connect(redo_shortcut_1, SIGNAL(activated()), this, SLOT(on_redo_pushButton_clicked()));
     QShortcut* redo_shortcut_2 = new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Z), ui->prompts_treeWidget);
     connect(redo_shortcut_2, SIGNAL(activated()), this, SLOT(on_redo_pushButton_clicked()));
-
     QShortcut* clear_shortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_X), ui->prompts_treeWidget);
     connect(clear_shortcut, SIGNAL(activated()), this, SLOT(on_clear_pushButton_clicked()));
 
     QShortcut* select_shortcut = new QShortcut(QKeySequence(Qt::Key_S), ui->prompts_treeWidget);
     connect(select_shortcut, SIGNAL(activated()), this, SLOT(on_selectPrompt_pushButton_clicked()));
-
     QShortcut* deselect_shortcut = new QShortcut(QKeySequence(Qt::Key_D), ui->prompts_treeWidget);
     connect(deselect_shortcut, SIGNAL(activated()), this, SLOT(on_deselectPrompt_pushButton_clicked()));
-
     QShortcut* assign_CID_shortcut = new QShortcut(QKeySequence(Qt::Key_A), ui->prompts_treeWidget);
     connect(assign_CID_shortcut, SIGNAL(activated()), this, SLOT(on_assignCID_pushButton_clicked()));
-
     QShortcut* clear_CID_shortcut = new QShortcut(QKeySequence(Qt::Key_C), ui->prompts_treeWidget);
     connect(clear_CID_shortcut, SIGNAL(activated()), this, SLOT(on_clearCID_pushButton_clicked()));
 }
@@ -489,11 +491,14 @@ void MainWindow::on_filterByNumber_checkBox_checkStateChanged(const Qt::CheckSta
         ui->filterByNumber_label2->setEnabled(true);
         ui->filterByNumber_FilterModels_pushButton->setEnabled(true);
     }
-    else if (arg1 == Qt::Unchecked) {
+    else {
         ui->filterByNumber_modelNumber_spinBox->setEnabled(false);
         ui->filterByNumber_label1->setEnabled(false);
         ui->filterByNumber_label2->setEnabled(false);
-        ui->filterByNumber_FilterModels_pushButton->setEnabled(false);
+
+        if (ui->filterBySize_checkBox->checkState() == Qt::Unchecked && ui->filterByVendor_checkBox->checkState() == Qt::Unchecked) {
+            ui->filterByNumber_FilterModels_pushButton->setEnabled(false);
+        }
 
         const auto enable_all_datasets = [&](QTreeWidgetItem* item) -> void {
             if (item == nullptr) {
@@ -520,12 +525,30 @@ void MainWindow::on_filterBySize_checkBox_checkStateChanged(const Qt::CheckState
         ui->filterBySize_Medium_radioButton->setEnabled(true);
         ui->filterBySize_Large_radioButton->setEnabled(true);
         ui->filterBySize_CustomInterval_radioButton->setEnabled(true);
+        ui->filterByNumber_FilterModels_pushButton->setEnabled(true);
+        if (ui->filterBySize_CustomInterval_radioButton->isChecked()) {
+            ui->filterBySize_CustomInterval_min_comboBox->setEnabled(true);
+            ui->filterBySize_CustomInterval_max_comboBox->setEnabled(true);
+            ui->filterBySize_CustomInterval_label1->setEnabled(true);
+            ui->filterBySize_CustomInterval_label2->setEnabled(true);
+            ui->filterBySize_CustomInterval_label3->setEnabled(true);
+            ui->filterBySize_CustomInterval_label4->setEnabled(true);
+        }
     }
     else {
         ui->filterBySize_Small_radioButton->setEnabled(false);
         ui->filterBySize_Medium_radioButton->setEnabled(false);
         ui->filterBySize_Large_radioButton->setEnabled(false);
         ui->filterBySize_CustomInterval_radioButton->setEnabled(false);
+        if (ui->filterByNumber_checkBox->checkState() == Qt::Unchecked && ui->filterByVendor_checkBox->checkState() == Qt::Unchecked) {
+            ui->filterByNumber_FilterModels_pushButton->setEnabled(false);
+        }
+        ui->filterBySize_CustomInterval_min_comboBox->setEnabled(false);
+        ui->filterBySize_CustomInterval_max_comboBox->setEnabled(false);
+        ui->filterBySize_CustomInterval_label1->setEnabled(false);
+        ui->filterBySize_CustomInterval_label2->setEnabled(false);
+        ui->filterBySize_CustomInterval_label3->setEnabled(false);
+        ui->filterBySize_CustomInterval_label4->setEnabled(false);
     }
 }
 
@@ -559,14 +582,14 @@ void MainWindow::on_HELM_Data_pushButton_clicked()
 void MainWindow::on_deselect_all_pushButton_clicked()
 {
     for (int i = 0; i < ui->dataset_treeWidget->topLevelItemCount(); ++i) {
-        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Unchecked);
+        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HELMPromptBrowser::DTDatasetNameColumn, Qt::Unchecked);
     }
 }
 
 void MainWindow::on_select_all_pushButton_clicked()
 {
     for (int i = 0; i < ui->dataset_treeWidget->topLevelItemCount(); ++i) {
-        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Checked);
+        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HELMPromptBrowser::DTDatasetNameColumn, Qt::Checked);
     }
 }
 
@@ -597,7 +620,7 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
 
     const int dataset_count = ui->dataset_treeWidget->topLevelItemCount();
     for (int i = 0; i < dataset_count; ++i) {
-        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Unchecked);
+        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HELMPromptBrowser::DTDatasetNameColumn, Qt::Unchecked);
     }
 
     const QJsonDocument custom_dataset = QJsonDocument::fromJson(jsonFile.readAll());
@@ -636,7 +659,7 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
 
     for (auto top_level_dataset = tree.cbegin(); top_level_dataset != tree.cend(); ++top_level_dataset) {
         QList<QTreeWidgetItem *> const matches
-            = ui->dataset_treeWidget->findItems(top_level_dataset.key(), Qt::MatchExactly, HELMPromptBrowser::DatasetNameColumn);
+            = ui->dataset_treeWidget->findItems(top_level_dataset.key(), Qt::MatchExactly, HELMPromptBrowser::DTDatasetNameColumn);
         const QStringList& sub_datasets = top_level_dataset.value();
 
         if (sub_datasets.isEmpty()) {
@@ -649,9 +672,9 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
                 const size_t child_count = item->childCount();
                 for (int i = 0; i < child_count; ++i) {
                     QTreeWidgetItem* child = item->child(i);
-                    const QString child_name = child->data(HELMPromptBrowser::DatasetNameColumn, Qt::DisplayRole).toString();
+                    const QString child_name = child->data(HELMPromptBrowser::DTDatasetNameColumn, Qt::DisplayRole).toString();
                     if (sub_datasets.contains(child_name)) {
-                        child->setCheckState(HELMPromptBrowser::DatasetNameColumn, Qt::Checked);
+                        child->setCheckState(HELMPromptBrowser::DTDatasetNameColumn, Qt::Checked);
                     }
                 }
             }
@@ -1043,10 +1066,10 @@ void MainWindow::on_assignCID_pushButton_clicked()
         lineEdit->setCompleter(completer);
     }
 
-    const bool ok = dialog->exec();
+    const bool result = dialog->exec();
     const QString CID = dialog->textValue();
 
-    if (ok) {
+    if (result) {
         if (!m_CIDList.contains(CID)) {
             m_CIDList.push_back(CID);
         }
@@ -1071,6 +1094,7 @@ void MainWindow::on_filter_pushButton_clicked()
         Warn("Nothing to filter!");
         return;
     }
+
     if (ui->filter_lineEdit->text().isEmpty()) {
         Warn("No filtering condition has been provided");
         return;
@@ -1118,6 +1142,21 @@ void MainWindow::on_clearCID_pushButton_clicked()
     const QList<QTreeWidgetItem*> selected_prompts = ui->prompts_treeWidget->selectedItems();
     for (QTreeWidgetItem* prompt : selected_prompts) {
         setCID(prompt, "");
+    }
+}
+
+
+void MainWindow::on_filterByVendor_checkBox_checkStateChanged(const Qt::CheckState &arg1)
+{
+    if (arg1 == Qt::Checked) {
+        ui->filterByVendor_comboBox->setEnabled(true);
+        ui->filterByNumber_FilterModels_pushButton->setEnabled(true);
+    }
+    else {
+        ui->filterByVendor_comboBox->setEnabled(false);
+        if (ui->filterBySize_checkBox->checkState() == Qt::Unchecked && ui->filterByNumber_checkBox->checkState() == Qt::Unchecked) {
+            ui->filterByNumber_FilterModels_pushButton->setEnabled(false);
+        }
     }
 }
 

@@ -66,6 +66,8 @@ private slots:
 
     void on_clearCID_pushButton_clicked();
 
+    void on_filterByVendor_checkBox_checkStateChanged(const Qt::CheckState &arg1);
+
 private:
     Ui::MainWindow *ui;
     QString m_helmDataPath;
