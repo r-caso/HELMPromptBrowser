@@ -36,6 +36,5 @@ private:
         { TokenType::AND, "and" },
         { TokenType::OR, "or" },
         { TokenType::ILLEGAL, "illegal" },
-    };
+        };
 };
-

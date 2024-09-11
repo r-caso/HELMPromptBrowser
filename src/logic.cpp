@@ -2,22 +2,22 @@
 
 bool isAtomic(const Expression& expr)
 {
-    return expr.op == Operator::NIL;
+    return expr.op() == Operator::NIL;
 }
 
 bool isConjunction(const Expression& expr)
 {
-    return expr.op == Operator::AND;
+    return expr.op() == Operator::AND;
 }
 
 bool isDisjunction(const Expression& expr)
 {
-    return expr.op == Operator::OR;
+    return expr.op() == Operator::OR;
 }
 
 bool isNegation(const Expression& expr)
 {
-    return expr.op == Operator::NOT;
+    return expr.op() == Operator::NOT;
 }
 
 static bool noOr(const Expression& expr) {
@@ -25,12 +25,12 @@ static bool noOr(const Expression& expr) {
         return true;
     }
     if (isNegation(expr)) {
-        return noOr(*expr.child(0));
+        return noOr(expr.scope());
     }
     if (isDisjunction(expr)) {
         return false;
     }
-    return noOr(*expr.child(0)) && noOr(*expr.child(1));
+    return noOr(expr.lhs()) && noOr(expr.rhs());
 }
 
 static bool noAndAboveOr(const Expression& expr)
@@ -39,29 +39,28 @@ static bool noAndAboveOr(const Expression& expr)
         return true;
     }
     if (isNegation(expr)) {
-        return noAndAboveOr(*expr.child(0));
+        return noAndAboveOr(expr.scope());
     }
     if (isDisjunction(expr)) {
-        return noAndAboveOr(*expr.child(0)) && noAndAboveOr(*expr.child(1));
+        return noAndAboveOr(expr.lhs()) && noAndAboveOr(expr.rhs());
     }
-    return noOr(*expr.child(0)) && noOr(*expr.child(1));
+    return noOr(expr.lhs()) && noOr(expr.rhs());
 }
 
 static Expression distributeAndOr(const Expression& expr1, const Expression& expr2)
 {
     if (isDisjunction(expr1)) {
-        Expression disjunction(Operator::OR);
-        disjunction.addOperands({ distributeAndOr(*expr1.child(0), expr2), distributeAndOr(*expr1.child(1), expr2) });
-        return disjunction;
+        return Expression(Operator::OR, "", { distributeAndOr(expr1.lhs(), expr2), distributeAndOr(expr1.rhs(), expr2) });
     }
     if (isDisjunction(expr2)) {
-        Expression disjunction(Operator::OR);
-        disjunction.addOperands({ distributeAndOr(expr1, *expr2.child(0)), distributeAndOr(expr1, *expr2.child(1)) });
-        return disjunction;
+        return Expression(Operator::OR, "", { distributeAndOr(expr1, expr2.lhs()), distributeAndOr(expr1, expr2.rhs()) });
     }
-    Expression conjunction(Operator::AND);
-    conjunction.addOperands({ expr1, expr2 });
-    return conjunction;
+    return Expression(Operator::AND, "", { expr1, expr2 });
+}
+
+bool isDNF(const Expression& expr)
+{
+    return isNNF(expr) && noAndAboveOr(expr);
 }
 
 bool isNNF(const Expression& expr)
@@ -70,58 +69,9 @@ bool isNNF(const Expression& expr)
         return true;
     }
     if (isNegation(expr)) {
-        return isAtomic(*expr.child(0));
+        return isAtomic(expr.scope());
     }
-    return isNNF(*expr.child(0)) && isNNF(*expr.child(1));
-}
-
-bool isDNF(const Expression& expr)
-{
-    return isNNF(expr) && noAndAboveOr(expr);
-}
-
-Expression toNNF(const Expression& expr)
-{
-    if (isAtomic(expr)) {
-        return expr;
-    }
-    if (isNegation(expr)) {
-        const Expression* scope = expr.child(0);
-
-        if (isAtomic(*scope)) {
-            return expr;
-        }
-        if (isNegation(*scope)) {
-            return toNNF(*scope->child(0));
-        }
-        if (isDisjunction(*scope)) {
-            Expression conjunction(Operator::AND);
-            Expression lhs(Operator::NOT);
-            lhs.addOperand(toNNF(*scope->child(0)));
-            Expression rhs(Operator::NOT);
-            rhs.addOperand(toNNF(*scope->child(1)));
-            conjunction.addOperands({ lhs, rhs });
-            return conjunction;
-        }
-        if (isConjunction(*scope)) {
-            Expression disjunction(Operator::OR);
-            Expression lhs(Operator::NOT);
-            lhs.addOperand(toNNF(*scope->child(0)));
-            Expression rhs(Operator::NOT);
-            rhs.addOperand(toNNF(*scope->child(1)));
-            disjunction.addOperands({ lhs, rhs });
-            return disjunction;
-        }
-        return {};
-    }
-    if (isDisjunction(expr)) {
-        Expression disjunction(Operator::OR);
-        disjunction.addOperands({ toNNF(*expr.child(0)), toNNF(*expr.child(1)) });
-        return disjunction;
-    }
-    Expression conjunction(Operator::AND);
-    conjunction.addOperands({ toNNF(*expr.child(0)), toNNF(*expr.child(1)) });
-    return conjunction;
+    return isNNF(expr.lhs()) && isNNF(expr.rhs());
 }
 
 Expression NNFtoDNF(const Expression& expr)
@@ -130,14 +80,44 @@ Expression NNFtoDNF(const Expression& expr)
         return expr;
     }
     if (isDisjunction(expr)) {
-        Expression disjunction(Operator::OR);
-        disjunction.addOperands({ toDNF(*expr.child(0)), toDNF(*expr.child(1)) });
-        return disjunction;
+        return Expression(Operator::OR, "", { toDNF(expr.lhs()), toDNF(expr.rhs()) });
     }
-    return distributeAndOr(toDNF(*expr.child(0)), toDNF(*expr.child(1)));
+    return distributeAndOr(toDNF(expr.lhs()), toDNF(expr.rhs()));
 }
 
 Expression toDNF(const Expression& expr)
 {
     return NNFtoDNF(toNNF(expr));
+}
+
+Expression toNNF(const Expression& expr)
+{
+    if (isAtomic(expr)) {
+        return expr;
+    }
+    if (isNegation(expr)) {
+        const Expression& scope = expr.scope();
+
+        if (isAtomic(scope)) {
+            return expr;
+        }
+        if (isNegation(scope)) {
+            return toNNF(scope.scope());
+        }
+        if (isDisjunction(scope)) {
+            const Expression lhs = isNegation(toNNF(scope.lhs())) ? toNNF(scope.lhs()).scope() : Expression(Operator::NOT, "", { toNNF(scope.lhs()) });
+            const Expression rhs = isNegation(toNNF(scope.rhs())) ? toNNF(scope.rhs()).scope() : Expression(Operator::NOT, "", { toNNF(scope.rhs()) });
+            return Expression(Operator::AND, "", { lhs, rhs });
+        }
+        if (isConjunction(scope)) {
+            const Expression lhs = isNegation(toNNF(scope.lhs())) ? toNNF(scope.lhs()).scope() : Expression(Operator::NOT, "", { toNNF(scope.lhs()) });
+            const Expression rhs = isNegation(toNNF(scope.rhs())) ? toNNF(scope.rhs()).scope() : Expression(Operator::NOT, "", { toNNF(scope.rhs()) });
+            return Expression(Operator::OR, "", { lhs, rhs });
+        }
+        return {};
+    }
+    if (isDisjunction(expr)) {
+        return Expression(Operator::OR, "", { toNNF(expr.lhs()), toNNF(expr.rhs()) });
+    }
+    return Expression(Operator::AND, "", { toNNF(expr.lhs()), toNNF(expr.rhs()) });
 }

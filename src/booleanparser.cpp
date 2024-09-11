@@ -11,6 +11,7 @@ BooleanParser::BooleanParser()
 
 bool BooleanParser::parse(const std::string& formula, Expression& expr)
 {
+    expr = Expression(); // clear for re-use in loops
     tokenize(formula);
     return sentence(expr);
 }
@@ -45,7 +46,6 @@ bool BooleanParser::expression(Expression& expr)
     if (expect(TokenType::NOT)) {
         bool const result = expression(expr);
         Expression new_expr = Expression(Operator::NOT);
-        //new_expr.addOperand(std::make_unique<Expression>(expr));
         new_expr.addOperand(expr);
         expr = new_expr;
         return result;
@@ -57,24 +57,21 @@ bool BooleanParser::expression(Expression& expr)
         if (!lhs_is_expression) {
             return false;
         }
-        
-        //new_expr.addOperand(std::make_unique<Expression>(expr));
+
         new_expr.addOperand(expr);
 
-        bool const main_connective_is_binary_operator = expect(TokenType::AND)
-                                                        || expect(TokenType::OR);
+        bool const main_connective_is_binary_operator = expect(TokenType::AND) || expect(TokenType::OR);
         if (!main_connective_is_binary_operator) {
             return false;
         }
-        
-        new_expr.op = (m_TokenList.at(m_Index - 1).second == TokenType::AND) ? Operator::AND : Operator::OR;
+
+        new_expr.setOperator((m_TokenList.at(m_Index - 1).second == TokenType::AND) ? Operator::AND : Operator::OR);
 
         bool const rhs_is_expression = expression(expr);
         if (!rhs_is_expression) {
             return false;
         }
 
-        //new_expr.addOperand(std::make_unique<Expression>(expr));
         new_expr.addOperand(expr);
 
         if (!expect(TokenType::RPAREN)) {
@@ -124,24 +121,31 @@ void BooleanParser::tokenize(const std::string& formula)
                 continue;
             }
             ident.push_back(c);
-        } else if (c == '"') {
+        }
+        else if (c == '"') {
             if (symbol_stack.empty()) {
                 symbol_stack.push(c);
             }
             else {
                 symbol_stack.pop();
             }
-        } else if (c == '(') {
+        }
+        else if (c == '(') {
             m_TokenList.push_back({ std::string(1, c), TokenType::LPAREN });
-        } else if (c == ')') {
+        }
+        else if (c == ')') {
             m_TokenList.push_back({ std::string(1, c), TokenType::RPAREN });
-        } else if (c == '!') {
+        }
+        else if (c == '!') {
             m_TokenList.push_back({ std::string(1, c), TokenType::NOT });
-        } else if (c == '|') {
+        }
+        else if (c == '|') {
             m_TokenList.push_back({ std::string(1, c), TokenType::OR });
-        } else if (c == '&') {
+        }
+        else if (c == '&') {
             m_TokenList.push_back({ std::string(1, c), TokenType::AND });
-        } else {
+        }
+        else {
             m_TokenList.push_back({ std::string(1, c), TokenType::ILLEGAL });
         }
     }
