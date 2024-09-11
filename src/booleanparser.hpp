@@ -27,7 +27,7 @@ private:
     TokenType m_Sym;
     std::vector<std::pair<std::string, TokenType>> m_TokenList;
 
-    const std::unordered_map<TokenType, std::string> TokenTypeName = {
+    inline static const std::unordered_map<TokenType, std::string> TokenTypeName = {
         { TokenType::START_SYMBOL, "<S>" },
         { TokenType::END_SYMBOL, "<E>" },
         { TokenType::LPAREN, "lparen" },

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/variant.hpp>
@@ -8,11 +9,7 @@
 struct UnaryNode;
 struct BinaryNode;
 
-typedef boost::variant<
-    std::string,
-    boost::recursive_wrapper<UnaryNode>,
-    boost::recursive_wrapper<BinaryNode>
-> expression;
+using expression = boost::variant<std::string, boost::recursive_wrapper<UnaryNode>, boost::recursive_wrapper<BinaryNode>>;
 
 struct AST : expression {
     using expression::expression;
@@ -20,8 +17,9 @@ struct AST : expression {
 };
 
 struct UnaryNode {
-    UnaryNode(const std::string& op, const AST& scope)
-        : op(op), scope(scope)
+    UnaryNode(std::string op, AST scope)
+        : op(std::move(op))
+        , scope(std::move(scope))
     {}
 
     std::string op;
@@ -29,8 +27,10 @@ struct UnaryNode {
 };
 
 struct BinaryNode {
-    BinaryNode(const std::string& op, const AST& lhs, const AST& rhs)
-        : op(op), lhs(lhs), rhs(rhs)
+    BinaryNode(std::string op, AST lhs, AST rhs)
+        : op(std::move(op))
+        , lhs(std::move(lhs))
+        , rhs(std::move(rhs))
     {}
 
     std::string op;

@@ -5,11 +5,11 @@
 #include <QMessageBox>
 #include <QStandardPaths>
 
-ExportOptionsDialog::ExportOptionsDialog(QString& output_path, QString& output_file, QString& compilation_name, QString& helm_data_json, QWidget *parent)
-    : m_outputPath(output_path)
-    , m_outputFile(output_file)
-    , m_compilationName(compilation_name)
-    , m_helmDataJSON(helm_data_json)
+ExportOptionsDialog::ExportOptionsDialog(QString& outputPath, QString& outputFile, QString& compilationName, QString& helmDataJson, QWidget *parent)
+    : m_outputPath(outputPath)
+    , m_outputFile(outputFile)
+    , m_compilationName(compilationName)
+    , m_helmDataJSON(helmDataJson)
     , QDialog(parent)
     , ui(new Ui::ExportOptionsDialog)
 {
@@ -38,7 +38,6 @@ void ExportOptionsDialog::on_buttonBox_accepted()
     m_compilationName = ui->compilationName_lineEdit->text();
     accept();
 }
-
 
 void ExportOptionsDialog::on_export_path_pushButton_clicked()
 {

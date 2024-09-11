@@ -16,19 +16,19 @@ bool checkQuery(const QString& query)
     return checkQuery(query.toStdString());
 }
 
-static Expression parseQuery(const std::string& query_str, Expression& expr)
+static Expression parseQuery(const std::string& querStr, Expression& expr)
 {
     AST parsetree;
-    auto begin = query_str.cbegin();
-    auto end = query_str.cend();
+    auto begin = querStr.cbegin();
+    auto end = querStr.cend();
     boost::spirit::qi::parse(begin, end, BooleanGrammar(), parsetree);
-    const std::string pretty_query_str = boost::apply_visitor(ASTFormatter(), parsetree);
+    const std::string prettyQueryStr = boost::apply_visitor(ASTFormatter(), parsetree);
 
-    BooleanParser().parse(pretty_query_str, expr);
+    BooleanParser().parse(prettyQueryStr, expr);
     return expr;
 }
 
-static std::pair<std::vector<std::string>, std::vector<std::string>> get_inclusion_exclusion_lists(const Expression& expression)
+static std::pair<std::vector<std::string>, std::vector<std::string>> getInclusionExclusionLists(const Expression& expression)
 {
     if (isAtomic(expression)) {
         std::vector<std::string> inclusions;
@@ -43,16 +43,16 @@ static std::pair<std::vector<std::string>, std::vector<std::string>> get_inclusi
     }
 
     if (isConjunction(expression)) {
-        std::pair<std::vector<std::string>, std::vector<std::string>> lhs_query = get_inclusion_exclusion_lists(*expression.child(0));
-        std::pair<std::vector<std::string>, std::vector<std::string>> rhs_query = get_inclusion_exclusion_lists(*expression.child(1));
+        std::pair<std::vector<std::string>, std::vector<std::string>> lhsQuery = getInclusionExclusionLists(*expression.child(0));
+        std::pair<std::vector<std::string>, std::vector<std::string>> rhsQuery = getInclusionExclusionLists(*expression.child(1));
 
         std::vector<std::string> inclusions;
         std::vector<std::string> exclusions;
-        inclusions.reserve(lhs_query.first.size() + rhs_query.first.size());
-        exclusions.reserve(lhs_query.second.size() + rhs_query.second.size());
+        inclusions.reserve(lhsQuery.first.size() + rhsQuery.first.size());
+        exclusions.reserve(lhsQuery.second.size() + rhsQuery.second.size());
 
-        std::ranges::merge(lhs_query.first, rhs_query.first, std::back_inserter(inclusions));
-        std::ranges::merge(lhs_query.second, rhs_query.second, std::back_inserter(exclusions));
+        std::ranges::merge(lhsQuery.first, rhsQuery.first, std::back_inserter(inclusions));
+        std::ranges::merge(lhsQuery.second, rhsQuery.second, std::back_inserter(exclusions));
 
         return { inclusions, exclusions };
     }
@@ -62,48 +62,48 @@ static std::pair<std::vector<std::string>, std::vector<std::string>> get_inclusi
 static std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> getQueries(const Expression& expression)
 {
     if (!isDisjunction(expression)) {
-        return { get_inclusion_exclusion_lists(expression) };
+        return { getInclusionExclusionLists(expression) };
     }
 
     if (isConjunction(*expression.child(0))) {
         std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> queries = getQueries(*expression.child(1));
-        queries.push_back(get_inclusion_exclusion_lists(*expression.child(0)));
+        queries.push_back(getInclusionExclusionLists(*expression.child(0)));
         return queries;
     }
     if (isConjunction(*expression.child(1))) {
         std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> queries = getQueries(*expression.child(0));
-        queries.push_back(get_inclusion_exclusion_lists(*expression.child(1)));
+        queries.push_back(getInclusionExclusionLists(*expression.child(1)));
         return queries;
     }
 
-    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> lhs_queries = getQueries(*expression.child(0));
-    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> rhs_queries = getQueries(*expression.child(1));
+    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> lhsQueries = getQueries(*expression.child(0));
+    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> rhsQueries = getQueries(*expression.child(1));
     std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> queries;
-    std::ranges::merge(lhs_queries, rhs_queries, std::back_inserter(queries));
+    std::ranges::merge(lhsQueries, rhsQueries, std::back_inserter(queries));
     return queries;
 }
 
-QList<QPair<QList<QString>, QList<QString>>> getQueries(const QString& query_string)
+QList<QPair<QList<QString>, QList<QString>>> getQueries(const QString& queryStr)
 {
     Expression expr;
-    parseQuery(query_string.toStdString(), expr);
+    parseQuery(queryStr.toStdString(), expr);
     const auto queries = getQueries(toDNF(expr));
 
-    QList<QPair<QList<QString>, QList<QString>>> q;
+    QList<QPair<QList<QString>, QList<QString>>> qQueries;
 
-    for (const auto& pair : queries) {
-        const auto& [inclusion, exclusion] = pair;
-        QList<QString> q_inclusion;
-        QList<QString> q_exclusion;
-        for (const auto& string : inclusion) {
-            q_inclusion.push_back(QString::fromStdString(string));
+    for (const auto& queryPair : queries) {
+        const auto& [inclusions, exclusions] = queryPair;
+        QList<QString> qInclusions;
+        QList<QString> qExclusions;
+        for (const auto& str : inclusions) {
+            qInclusions.push_back(QString::fromStdString(str));
         }
-        for (const auto& string : exclusion) {
-            q_exclusion.push_back(QString::fromStdString(string));
+        for (const auto& str : exclusions) {
+            qExclusions.push_back(QString::fromStdString(str));
         }
-        QPair<QList<QString>, QList<QString>> const q_pair({q_inclusion, q_exclusion});
-        q.push_back(q_pair);
+        QPair<QList<QString>, QList<QString>> const qQueryPair({qInclusions, qExclusions});
+        qQueries.push_back(qQueryPair);
     }
 
-    return q;
+    return qQueries;
 }

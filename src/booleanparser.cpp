@@ -45,7 +45,8 @@ bool BooleanParser::expression(Expression& expr)
     if (expect(TokenType::NOT)) {
         bool const result = expression(expr);
         Expression new_expr = Expression(Operator::NOT);
-        new_expr.addOperand(std::make_shared<Expression>(expr));
+        //new_expr.addOperand(std::make_unique<Expression>(expr));
+        new_expr.addOperand(expr);
         expr = new_expr;
         return result;
     }
@@ -57,7 +58,8 @@ bool BooleanParser::expression(Expression& expr)
             return false;
         }
         
-        new_expr.addOperand(std::make_shared<Expression>(expr));
+        //new_expr.addOperand(std::make_unique<Expression>(expr));
+        new_expr.addOperand(expr);
 
         bool const main_connective_is_binary_operator = expect(TokenType::AND)
                                                         || expect(TokenType::OR);
@@ -72,7 +74,8 @@ bool BooleanParser::expression(Expression& expr)
             return false;
         }
 
-        new_expr.addOperand(std::make_shared<Expression>(expr));
+        //new_expr.addOperand(std::make_unique<Expression>(expr));
+        new_expr.addOperand(expr);
 
         if (!expect(TokenType::RPAREN)) {
             return false;

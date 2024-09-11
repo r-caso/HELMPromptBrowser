@@ -12,7 +12,7 @@ class VendorDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit VendorDialog(QList<int>& vendor_list, QWidget *parent = nullptr);
+    explicit VendorDialog(QList<int>& vendorList, QWidget *parent = nullptr);
     ~VendorDialog();
 
 private slots:
