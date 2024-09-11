@@ -7,14 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>1052</width>
-    <height>724</height>
+    <height>733</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_12">
+   <layout class="QHBoxLayout" name="horizontalLayout_13">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
@@ -168,7 +168,7 @@
                      <number>0</number>
                     </property>
                     <property name="maximum">
-                     <number>69</number>
+                     <number>70</number>
                     </property>
                     <property name="singleStep">
                      <number>10</number>
@@ -201,90 +201,13 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QComboBox" name="filterByVendor_comboBox">
+                 <widget class="QPushButton" name="filterByVendor_pushButton">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
-                  <item>
-                   <property name="text">
-                    <string>all vendors</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>AlephAlpha</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>ai21</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>anthropic</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>cohere</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>eleutherai</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>lmsys</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>meta</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>microsoft</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>mistralai</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>mosaicml</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>openai</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>stanford</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>tiiuae</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>together</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>writer_palmyra</string>
-                   </property>
-                  </item>
+                  <property name="text">
+                   <string>Select vendors</string>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -302,44 +225,86 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QRadioButton" name="filterBySize_Small_radioButton">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Small</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QRadioButton" name="filterBySize_Medium_radioButton">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Medium</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QRadioButton" name="filterBySize_Large_radioButton">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Large</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QRadioButton" name="filterBySize_CustomInterval_radioButton">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Custom interval:</string>
-                  </property>
-                 </widget>
+                 <layout class="QGridLayout" name="gridLayout_4">
+                  <item row="1" column="0">
+                   <widget class="QRadioButton" name="filterBySize_Tiny_radioButton">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>[1e9, 20e9)</string>
+                    </property>
+                    <attribute name="buttonGroup">
+                     <string notr="true">filterBySize_buttonGroup</string>
+                    </attribute>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QRadioButton" name="filterBySize_ReallyTiny_radioButton">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>[350e6, 1e9)</string>
+                    </property>
+                    <attribute name="buttonGroup">
+                     <string notr="true">filterBySize_buttonGroup</string>
+                    </attribute>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QRadioButton" name="filterBySize_CustomInterval_radioButton">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Custom interval:</string>
+                    </property>
+                    <attribute name="buttonGroup">
+                     <string notr="true">filterBySize_buttonGroup</string>
+                    </attribute>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QRadioButton" name="filterBySize_Small_radioButton">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>[20e9, 70e9)</string>
+                    </property>
+                    <attribute name="buttonGroup">
+                     <string notr="true">filterBySize_buttonGroup</string>
+                    </attribute>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QRadioButton" name="filterBySize_Medium_radioButton">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>[70e9, 180e9)</string>
+                    </property>
+                    <attribute name="buttonGroup">
+                     <string notr="true">filterBySize_buttonGroup</string>
+                    </attribute>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QRadioButton" name="filterBySize_Large_radioButton">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>[530e9]</string>
+                    </property>
+                    <attribute name="buttonGroup">
+                     <string notr="true">filterBySize_buttonGroup</string>
+                    </attribute>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                 <item>
                  <layout class="QGridLayout" name="gridLayout">
@@ -351,7 +316,7 @@
                        <bool>false</bool>
                       </property>
                       <property name="text">
-                       <string>Min:</string>
+                       <string>[ Min: </string>
                       </property>
                      </widget>
                     </item>
@@ -360,16 +325,76 @@
                       <property name="enabled">
                        <bool>false</bool>
                       </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QLabel" name="filterBySize_CustomInterval_label2">
-                      <property name="enabled">
-                       <bool>false</bool>
-                      </property>
-                      <property name="text">
-                       <string>b</string>
-                      </property>
+                      <item>
+                       <property name="text">
+                        <string>350e6</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>1e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>10e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>20e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>30e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>40e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>50e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>60e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>70e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>100e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>130e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>175e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>180e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>530e9</string>
+                       </property>
+                      </item>
                      </widget>
                     </item>
                     <item>
@@ -387,7 +412,7 @@
                     </item>
                    </layout>
                   </item>
-                  <item row="0" column="1">
+                  <item row="0" column="2">
                    <layout class="QHBoxLayout" name="horizontalLayout_5">
                     <item>
                      <widget class="QLabel" name="filterBySize_CustomInterval_label3">
@@ -404,6 +429,82 @@
                       <property name="enabled">
                        <bool>false</bool>
                       </property>
+                      <property name="currentText">
+                       <string>531e9</string>
+                      </property>
+                      <property name="currentIndex">
+                       <number>13</number>
+                      </property>
+                      <item>
+                       <property name="text">
+                        <string>350e6</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>1e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>10e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>20e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>30e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>40e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>50e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>60e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>70e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>100e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>130e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>175e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>180e9</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>531e9</string>
+                       </property>
+                      </item>
                      </widget>
                     </item>
                     <item>
@@ -412,7 +513,7 @@
                        <bool>false</bool>
                       </property>
                       <property name="text">
-                       <string>b</string>
+                       <string>)</string>
                       </property>
                      </widget>
                     </item>
@@ -430,6 +531,13 @@
                      </spacer>
                     </item>
                    </layout>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="filterBySize_CustomInterval_label2">
+                    <property name="text">
+                     <string>,</string>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -456,12 +564,22 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="filterByNumber_FilterModels_pushButton">
+            <widget class="QPushButton" name="applyDatasetFilters_pushButton">
              <property name="enabled">
               <bool>false</bool>
              </property>
              <property name="text">
               <string>Apply filters</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="clearDatasetFilters_pushButton">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Clear filters</string>
              </property>
             </widget>
            </item>
@@ -493,6 +611,47 @@
          <string>Prompts</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_12">
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Filter prompts by CID:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="filterPromptsByCID_lineEdit"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="filterPromptsByCID_pushButton">
+             <property name="text">
+              <string>Apply CID filter</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="clearPromptFilter_pushButton">
+             <property name="text">
+              <string>Clear CID filter</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_13">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_11">
            <item>
@@ -1099,5 +1258,24 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>filterPromptsByCID_lineEdit</sender>
+   <signal>returnPressed()</signal>
+   <receiver>filterPromptsByCID_pushButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>69</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>827</x>
+     <y>70</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <buttongroups>
+  <buttongroup name="filterBySize_buttonGroup"/>
+ </buttongroups>
 </ui>

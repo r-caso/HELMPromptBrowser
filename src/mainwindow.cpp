@@ -23,12 +23,14 @@
 #include <QStandardPaths>
 #include <QString>
 #include <QStringList>
+#include <QStringListModel>
 #include <QTreeWidgetItem>
 
 #include "exportoptionsdialog.hpp"
 #include "helperfunctions.hpp"
 #include "hpb_globals.hpp"
 #include "queryparser.hpp"
+#include "vendordialog.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -41,324 +43,332 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->HELM_Data_lineEdit->setText(m_helmDataPath);
 
+    m_CIDCompleter = new QCompleter(m_CIDList, this);
+    m_CIDCompleter->setCaseSensitivity(Qt::CaseInsensitive);
+    ui->filterPromptsByCID_lineEdit->setCompleter(m_CIDCompleter);
+
     /***********************
      * Set up dataset tree *
      ***********************/
 
-    const std::map<QString, QList<QPair<QString, int>>> HELM_hierarchy = {
+    const std::map<QString, QList<std::tuple<QString, int, QList<int>>>> HELM_dataset_hierarchy = {
         {
             "babi_qa", QList({
-                std::make_pair(QString("babi_qa:task=15"), 69),
-                std::make_pair(QString("babi_qa:task=19"), 69),
-                std::make_pair(QString("babi_qa:task=3"), 69),
-                std::make_pair(QString("babi_qa:task=all"), 69),
+                std::make_tuple(QString("babi_qa:task=15"), 70, HELMPromptBrowser::list_70),
+                std::make_tuple(QString("babi_qa:task=19"), 70, HELMPromptBrowser::list_70),
+                std::make_tuple(QString("babi_qa:task=3"), 70, HELMPromptBrowser::list_70),
+                std::make_tuple(QString("babi_qa:task=all"), 70, HELMPromptBrowser::list_70),
             })
         },
         {
             "bbq", QList({
-                std::make_pair(QString("bbq:subject=all,method=multiple_choice_joint"), 42),
-                std::make_pair(QString("bbq:subject=all,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("bbq:subject=all,method=multiple_choice_separate_original"), 6),
+                std::make_tuple(QString("bbq:subject=all,method=multiple_choice_joint"), 42, HELMPromptBrowser::list_42),
+                std::make_tuple(QString("bbq:subject=all,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("bbq:subject=all,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
             })
         },
         {
             "blimp", QList({
-                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_joint"), 6),
-                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("blimp:phenomenon=binding,method=multiple_choice_separate_original"), 32),
-                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_joint"), 6),
-                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_original"), 32),
-                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_joint"), 6),
-                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("blimp:phenomenon=island_effects,method=multiple_choice_separate_original"), 32),
-                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_joint"), 6),
-                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("blimp:phenomenon=quantifiers,method=multiple_choice_separate_original"), 32),
+                std::make_tuple(QString("blimp:phenomenon=binding,method=multiple_choice_joint"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("blimp:phenomenon=binding,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("blimp:phenomenon=binding,method=multiple_choice_separate_original"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_joint"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("blimp:phenomenon=irregular_forms,method=multiple_choice_separate_original"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("blimp:phenomenon=island_effects,method=multiple_choice_joint"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("blimp:phenomenon=island_effects,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("blimp:phenomenon=island_effects,method=multiple_choice_separate_original"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("blimp:phenomenon=quantifiers,method=multiple_choice_joint"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("blimp:phenomenon=quantifiers,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("blimp:phenomenon=quantifiers,method=multiple_choice_separate_original"), 32, HELMPromptBrowser::list_32),
             })
         },
         {
             "bold:subject=all", QList({
-                std::make_pair(QString(""), 42)
+                std::make_tuple(QString(""), 42, HELMPromptBrowser::list_42)
             })
         },
         {
             "boolq", QList({
-                std::make_pair(QString(""), 66)
+                std::make_tuple(QString(""), 67, HELMPromptBrowser::list_67)
             })
         },
         {
             "boolq:only_contrast=True", QList({
-                std::make_pair(QString(""), 42)
+                std::make_tuple(QString(""), 42, HELMPromptBrowser::list_42)
             })
         },
         {
             "civil_comments", QList({
-                std::make_pair(QString("civil_comments:demographic=LGBTQ"), 66),
-                std::make_pair(QString("civil_comments:demographic=all"), 66),
-                std::make_pair(QString("civil_comments:demographic=black"), 66),
-                std::make_pair(QString("civil_comments:demographic=christian"), 66),
-                std::make_pair(QString("civil_comments:demographic=female"), 66),
-                std::make_pair(QString("civil_comments:demographic=male"), 66),
-                std::make_pair(QString("civil_comments:demographic=muslim"), 66),
-                std::make_pair(QString("civil_comments:demographic=other_religions"), 66),
-                std::make_pair(QString("civil_comments:demographic=white"), 66),
+                std::make_tuple(QString("civil_comments:demographic=LGBTQ"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("civil_comments:demographic=all"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("civil_comments:demographic=black"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("civil_comments:demographic=christian"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("civil_comments:demographic=female"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("civil_comments:demographic=male"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("civil_comments:demographic=muslim"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("civil_comments:demographic=other_religions"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("civil_comments:demographic=white"), 67, HELMPromptBrowser::list_67),
             })
         },
         {
             "code", QList({
-                std::make_pair(QString("code:dataset=apps"), 2),
-                std::make_pair(QString("code:dataset=humaneval"), 2)
+                std::make_tuple(QString("code:dataset=apps"), 2, HELMPromptBrowser::list_2),
+                std::make_tuple(QString("code:dataset=humaneval"), 2, HELMPromptBrowser::list_2)
             })
         },
         {
             "commonsense", QList({
-                std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_joint"), 6),
-                std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("commonsense:dataset=hellaswag,method=multiple_choice_separate_original"), 32),
-                std::make_pair(QString("commonsense:dataset=openbookqa,method=multiple_choice_joint"), 6),
-                std::make_pair(QString("commonsense:dataset=openbookqa,method=multiple_choice_separate_calibrated"), 32),
-                std::make_pair(QString("commonsense:dataset=openbookqa,method=multiple_choice_separate_original"), 6),
+                std::make_tuple(QString("commonsense:dataset=hellaswag,method=multiple_choice_joint"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("commonsense:dataset=hellaswag,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("commonsense:dataset=hellaswag,method=multiple_choice_separate_original"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("commonsense:dataset=openbookqa,method=multiple_choice_joint"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("commonsense:dataset=openbookqa,method=multiple_choice_separate_calibrated"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("commonsense:dataset=openbookqa,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
             })
         },
         {
             "copyright", QList({
-                std::make_pair(QString("copyright:datatag=n_books_1000-extractions_per_book_1-prefix_length_125"), 42),
-                std::make_pair(QString("copyright:datatag=oh_the_places"), 10),
-                std::make_pair(QString("copyright:datatag=popular_books-prefix_length_125.json"), 42),
-                std::make_pair(QString("copyright:datatag=prompt_num_line_1-min_lines_20.json"), 2),
-                std::make_pair(QString("copyright:datatag=prompt_num_line_10-min_lines_20.json"), 2),
+                std::make_tuple(QString("copyright:datatag=n_books_1000-extractions_per_book_1-prefix_length_125"), 42, HELMPromptBrowser::list_42),
+                std::make_tuple(QString("copyright:datatag=oh_the_places"), 10, HELMPromptBrowser::list_10),
+                std::make_tuple(QString("copyright:datatag=popular_books-prefix_length_125.json"), 42, HELMPromptBrowser::list_42),
+                std::make_tuple(QString("copyright:datatag=prompt_num_line_1-min_lines_20.json"), 2, HELMPromptBrowser::list_2),
+                std::make_tuple(QString("copyright:datatag=prompt_num_line_10-min_lines_20.json"), 2, HELMPromptBrowser::list_2),
             })
         },
         {
             "disinfo", QList({
-                std::make_pair(QString("disinfo:type=reiteration,topic=climate"), 42),
-                std::make_pair(QString("disinfo:type=reiteration,topic=covid"), 42),
-                std::make_pair(QString("disinfo:type=wedging"), 42),
+                std::make_tuple(QString("disinfo:type=reiteration,topic=climate"), 42, HELMPromptBrowser::list_42),
+                std::make_tuple(QString("disinfo:type=reiteration,topic=covid"), 42, HELMPromptBrowser::list_42),
+                std::make_tuple(QString("disinfo:type=wedging"), 42, HELMPromptBrowser::list_42),
             })
         },
         {
             "dyck_language_np=3", QList({
-                std::make_pair(QString(""), 68)
+                std::make_tuple(QString(""), 69, HELMPromptBrowser::list_69)
             })
         },
         {
             "entity_data_imputation", QList({
-                std::make_pair(QString("entity_data_imputation:dataset=Buy"), 66),
-                std::make_pair(QString("entity_data_imputation:dataset=Restaurant"), 66),
+                std::make_tuple(QString("entity_data_imputation:dataset=Buy"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("entity_data_imputation:dataset=Restaurant"), 69, HELMPromptBrowser::list_69),
             })
         },
         {
             "entity_matching", QList({
-                std::make_pair(QString("entity_matching:dataset=Abt_Buy"), 66),
-                std::make_pair(QString("entity_matching:dataset=Beer"), 66),
-                std::make_pair(QString("entity_matching:dataset=Dirty_iTunes_Amazon"), 66),
+                std::make_tuple(QString("entity_matching:dataset=Abt_Buy"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("entity_matching:dataset=Beer"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("entity_matching:dataset=Dirty_iTunes_Amazon"), 69, HELMPromptBrowser::list_69),
             })
         },
         {
             "gsm", QList({
-                std::make_pair(QString(""), 68)
+                std::make_tuple(QString(""), 69, HELMPromptBrowser::list_69)
             })
         },
         {
             "ice", QList({
-                std::make_pair(QString("ice:gender=female"), 32),
-                std::make_pair(QString("ice:gender=male"), 32),
-                std::make_pair(QString("ice:subset=ea"), 32),
-                std::make_pair(QString("ice:subset=hk"), 32),
-                std::make_pair(QString("ice:subset=ind"), 32),
-                std::make_pair(QString("ice:subset=usa"), 32),
+                std::make_tuple(QString("ice:gender=female"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("ice:gender=male"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("ice:subset=ea"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("ice:subset=hk"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("ice:subset=ind"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("ice:subset=usa"), 32, HELMPromptBrowser::list_32),
             })
         },
         {
             "imdb", QList({
-                std::make_pair(QString(""), 66)
+                std::make_tuple(QString(""), 67, HELMPromptBrowser::list_67)
             })
         },
         {
             "imdb:only_contrast=True", QList({
-                std::make_pair(QString(""),42)
+                std::make_tuple(QString(""),42, HELMPromptBrowser::list_42)
             })
         },
         {
             "legal_support", QList({
-                std::make_pair(QString("legal_support,method=multiple_choice_joint"), 68),
-                std::make_pair(QString("legal_support,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("legal_support,method=multiple_choice_separate_original"), 6),
+                std::make_tuple(QString("legal_support,method=multiple_choice_joint"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("legal_support,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("legal_support,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
             })
         },
         {
             "lsat_qa", QList({
-                std::make_pair(QString("lsat_qa:task=all,method=multiple_choice_joint"), 68),
-                std::make_pair(QString("lsat_qa:task=all,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("lsat_qa:task=all,method=multiple_choice_separate_original"), 6),
+                std::make_tuple(QString("lsat_qa:task=all,method=multiple_choice_joint"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("lsat_qa:task=all,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("lsat_qa:task=all,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
             })
         },
         {
             "math", QList({
-                std::make_pair(QString("math:subject=algebra,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
-                std::make_pair(QString("math:subject=algebra,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
-                std::make_pair(QString("math:subject=counting_and_probability,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
-                std::make_pair(QString("math:subject=counting_and_probability,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
-                std::make_pair(QString("math:subject=geometry,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
-                std::make_pair(QString("math:subject=geometry,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
-                std::make_pair(QString("math:subject=intermediate_algebra,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
-                std::make_pair(QString("math:subject=intermediate_algebra,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
-                std::make_pair(QString("math:subject=number_theory,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
-                std::make_pair(QString("math:subject=number_theory,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
-                std::make_pair(QString("math:subject=prealgebra,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
-                std::make_pair(QString("math:subject=prealgebra,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
-                std::make_pair(QString("math:subject=precalculus,level=1,use_official_examples=False,use_chain_of_thought=True"), 68),
-                std::make_pair(QString("math:subject=precalculus,level=1,use_official_examples=True,use_chain_of_thought=False"), 68),
+                std::make_tuple(QString("math:subject=algebra,level=1,use_official_examples=False,use_chain_of_thought=True"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=algebra,level=1,use_official_examples=True,use_chain_of_thought=False"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=counting_and_probability,level=1,use_official_examples=False,use_chain_of_thought=True"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=counting_and_probability,level=1,use_official_examples=True,use_chain_of_thought=False"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=geometry,level=1,use_official_examples=False,use_chain_of_thought=True"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=geometry,level=1,use_official_examples=True,use_chain_of_thought=False"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=intermediate_algebra,level=1,use_official_examples=False,use_chain_of_thought=True"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=intermediate_algebra,level=1,use_official_examples=True,use_chain_of_thought=False"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=number_theory,level=1,use_official_examples=False,use_chain_of_thought=True"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=number_theory,level=1,use_official_examples=True,use_chain_of_thought=False"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=prealgebra,level=1,use_official_examples=False,use_chain_of_thought=True"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=prealgebra,level=1,use_official_examples=True,use_chain_of_thought=False"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=precalculus,level=1,use_official_examples=False,use_chain_of_thought=True"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("math:subject=precalculus,level=1,use_official_examples=True,use_chain_of_thought=False"), 69, HELMPromptBrowser::list_69),
             })
         },
         {
             "mmlu", QList({
-                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_joint"), 66),
-                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_original"), 6),
-                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_joint"), 66),
-                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_original"), 6),
-                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_joint"), 66),
-                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("mmlu:subject=computer_security,method=multiple_choice_separate_original"), 6),
-                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_joint"), 66),
-                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("mmlu:subject=econometrics,method=multiple_choice_separate_original"), 6),
-                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_joint"), 66),
-                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_original"), 6),
+                std::make_tuple(QString("mmlu:subject=abstract_algebra,method=multiple_choice_joint"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("mmlu:subject=abstract_algebra,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("mmlu:subject=college_chemistry,method=multiple_choice_joint"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("mmlu:subject=college_chemistry,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("mmlu:subject=computer_security,method=multiple_choice_joint"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("mmlu:subject=computer_security,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("mmlu:subject=computer_security,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("mmlu:subject=econometrics,method=multiple_choice_joint"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("mmlu:subject=econometrics,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("mmlu:subject=econometrics,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_joint"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("mmlu:subject=us_foreign_policy,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
             })
         },
         {
             "msmarco", QList({
-                std::make_pair(QString("msmarco:track=regular,valid_topk=30"), 32),
-                std::make_pair(QString("msmarco:track=trec,valid_topk=30"), 32),
+                std::make_tuple(QString("msmarco:track=regular,valid_topk=30"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("msmarco:track=trec,valid_topk=30"), 32, HELMPromptBrowser::list_32),
             })
         },
         {
             "narrative_qa", QList({
-                std::make_pair(QString(""), 65)
+                std::make_tuple(QString(""), 66, HELMPromptBrowser::list_66b)
             })
         },
         {
             "natural_qa", QList({
-                std::make_pair(QString("natural_qa:mode=closedbook"), 66),
-                std::make_pair(QString("natural_qa:mode=openbook_longans"), 65),
+                std::make_tuple(QString("natural_qa:mode=closedbook"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("natural_qa:mode=openbook_longans"), 66, HELMPromptBrowser::list_66a),
             })
         },
         {
             "quac", QList({
-                std::make_pair(QString(""), 65)
+                std::make_tuple(QString(""), 66, HELMPromptBrowser::list_66b)
             })
         },
         {
             "raft", QList({
-                std::make_pair(QString("raft:subset=ade_corpus_v2"), 66),
-                std::make_pair(QString("raft:subset=banking_77"), 66),
-                std::make_pair(QString("raft:subset=neurips_impact_statement_risks"), 66),
-                std::make_pair(QString("raft:subset=one_stop_english"), 66),
-                std::make_pair(QString("raft:subset=overruling"), 66),
-                std::make_pair(QString("raft:subset=semiconductor_org_types"), 66),
-                std::make_pair(QString("raft:subset=systematic_review_inclusion"), 66),
-                std::make_pair(QString("raft:subset=tai_safety_research"), 66),
-                std::make_pair(QString("raft:subset=terms_of_service"), 66),
-                std::make_pair(QString("raft:subset=tweet_eval_hate"), 66),
-                std::make_pair(QString("raft:subset=twitter_complaints"), 66),
+                std::make_tuple(QString("raft:subset=ade_corpus_v2"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=banking_77"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=neurips_impact_statement_risks"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=one_stop_english"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=overruling"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=semiconductor_org_types"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=systematic_review_inclusion"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=tai_safety_research"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=terms_of_service"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=tweet_eval_hate"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("raft:subset=twitter_complaints"), 67, HELMPromptBrowser::list_67),
             })
         },
         {
             "real_toxicity_prompts", QList({
-                std::make_pair(QString(""), 42)
+                std::make_tuple(QString(""), 42, HELMPromptBrowser::list_42)
             })
         },
         {
             "summarization_cnndm", QList({
-                std::make_pair(QString("summarization_cnndm:temperature=0.3,device=cpu"), 42),
-                std::make_pair(QString("summarization_cnndm:temperature=0.3,device=cuda"), 40),
+                std::make_tuple(QString("summarization_cnndm:temperature=0.3,device=cpu"), 42, HELMPromptBrowser::list_42),
+                std::make_tuple(QString("summarization_cnndm:temperature=0.3,device=cuda"), 40, HELMPromptBrowser::list_40),
             })
         },
         {
             "summarization_xsum", QList({
-                std::make_pair(QString("summarization_xsum:temperature=0.3,device=cpu"), 42),
-                std::make_pair(QString("summarization_xsum:temperature=0.3,device=cuda"), 40),
+                std::make_tuple(QString("summarization_xsum:temperature=0.3,device=cpu"), 42, HELMPromptBrowser::list_42),
+                std::make_tuple(QString("summarization_xsum:temperature=0.3,device=cuda"), 40, HELMPromptBrowser::list_40),
             })
         },
         {
             "synthetic_efficiency:random=None", QList({
-                std::make_pair(QString(""), 39)
+             std::make_tuple(QString(""), 39, HELMPromptBrowser::list_39)
             })
         },
         {
             "synthetic_reasoning", QList({
-                std::make_pair(QString("synthetic_reasoning:mode=induction"), 68),
-                std::make_pair(QString("synthetic_reasoning:mode=pattern_match"), 68),
-                std::make_pair(QString("synthetic_reasoning:mode=variable_substitution"), 68),
+                std::make_tuple(QString("synthetic_reasoning:mode=induction"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("synthetic_reasoning:mode=pattern_match"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("synthetic_reasoning:mode=variable_substitution"), 69, HELMPromptBrowser::list_69),
             })
         },
         {
             "synthetic_reasoning_natural", QList({
-                std::make_pair(QString("synthetic_reasoning_natural:difficulty=easy"), 68),
-                std::make_pair(QString("synthetic_reasoning_natural:difficulty=hard"), 68),
+                std::make_tuple(QString("synthetic_reasoning_natural:difficulty=easy"), 69, HELMPromptBrowser::list_69),
+                std::make_tuple(QString("synthetic_reasoning_natural:difficulty=hard"), 69, HELMPromptBrowser::list_69),
             })
         },
         {
             "the_pile", QList({
-                std::make_pair(QString("the_pile:subset=ArXiv"), 24),
-                std::make_pair(QString("the_pile:subset=BookCorpus2"), 32),
-                std::make_pair(QString("the_pile:subset=Enron Emails"), 32),
-                std::make_pair(QString("the_pile:subset=Github"), 24),
-                std::make_pair(QString("the_pile:subset=PubMed Central"), 24),
-                std::make_pair(QString("the_pile:subset=Wikipedia (en)"), 32),
+                std::make_tuple(QString("the_pile:subset=ArXiv"), 24, HELMPromptBrowser::list_24),
+                std::make_tuple(QString("the_pile:subset=BookCorpus2"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("the_pile:subset=Enron Emails"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("the_pile:subset=Github"), 24, HELMPromptBrowser::list_24),
+                std::make_tuple(QString("the_pile:subset=PubMed Central"), 24, HELMPromptBrowser::list_24),
+                std::make_tuple(QString("the_pile:subset=Wikipedia (en)"), 32, HELMPromptBrowser::list_32),
             })
         },
         {
             "truthful_qa", QList({
-                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_joint"), 66),
-                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_calibrated"), 6),
-                std::make_pair(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_original"), 6),
+                std::make_tuple(QString("truthful_qa:task=mc_single,method=multiple_choice_joint"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_calibrated"), 6, HELMPromptBrowser::list_6),
+                std::make_tuple(QString("truthful_qa:task=mc_single,method=multiple_choice_separate_original"), 6, HELMPromptBrowser::list_6),
             })
         },
         {
             "twitter_aae", QList({
-                std::make_pair(QString("twitter_aae:demographic=aa"), 32),
-                std::make_pair(QString("twitter_aae:demographic=white"), 32),
+                std::make_tuple(QString("twitter_aae:demographic=aa"), 32, HELMPromptBrowser::list_32),
+                std::make_tuple(QString("twitter_aae:demographic=white"), 32, HELMPromptBrowser::list_32),
             })
         },
         {
             "wikifact", QList({
-                std::make_pair(QString("wikifact:k=5,subject=author"), 66),
-                std::make_pair(QString("wikifact:k=5,subject=currency"), 66),
-                std::make_pair(QString("wikifact:k=5,subject=discoverer_or_inventor"), 66),
-                std::make_pair(QString("wikifact:k=5,subject=instance_of"), 66),
-                std::make_pair(QString("wikifact:k=5,subject=medical_condition_treated"), 66),
-                std::make_pair(QString("wikifact:k=5,subject=part_of"), 65),
-                std::make_pair(QString("wikifact:k=5,subject=place_of_birth"), 66),
-                std::make_pair(QString("wikifact:k=5,subject=plaintiff"), 66),
-                std::make_pair(QString("wikifact:k=5,subject=position_held"), 66),
-                std::make_pair(QString("wikifact:k=5,subject=symptoms_and_signs"), 66),
+                std::make_tuple(QString("wikifact:k=5,subject=author"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("wikifact:k=5,subject=currency"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("wikifact:k=5,subject=discoverer_or_inventor"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("wikifact:k=5,subject=instance_of"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("wikifact:k=5,subject=medical_condition_treated"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("wikifact:k=5,subject=part_of"), 66, HELMPromptBrowser::list_66b),
+                std::make_tuple(QString("wikifact:k=5,subject=place_of_birth"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("wikifact:k=5,subject=plaintiff"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("wikifact:k=5,subject=position_held"), 67, HELMPromptBrowser::list_67),
+                std::make_tuple(QString("wikifact:k=5,subject=symptoms_and_signs"), 67, HELMPromptBrowser::list_67),
             })
         }
     };
 
     ui->dataset_treeWidget->setColumnCount(HELMPromptBrowser::DTColumnCount);
-    ui->dataset_treeWidget->hideColumn(HELMPromptBrowser::DTNumberOfModelsPerDatasetColumn);
 
-    for (const auto& [task, sub_task_number_of_models] : HELM_hierarchy) {
-        QTreeWidgetItem* item = new QTreeWidgetItem();
+    for (int i = HELMPromptBrowser::DTNumberOfModels; i < HELMPromptBrowser::DTColumnCount; ++i) {
+        ui->dataset_treeWidget->hideColumn(i);
+    }
+
+    for (const auto& [task, vector] : HELM_dataset_hierarchy) {
+        auto *item = new QTreeWidgetItem();
         item->setCheckState(HELMPromptBrowser::DTDatasetNameColumn, Qt::Unchecked);
         item->setFlags(item->flags() | Qt::ItemIsAutoTristate);
         item->setData(HELMPromptBrowser::DTDatasetNameColumn, Qt::DisplayRole, task);
-        for (const auto& [sub_task, number_of_models]  : sub_task_number_of_models) {
+        for (const auto& [sub_task, number_of_models, model_list]  : vector) {
             if (sub_task.isEmpty()) {
-                item->setData(HELMPromptBrowser::DTNumberOfModelsPerDatasetColumn, Qt::DisplayRole, number_of_models);
+                item->setData(HELMPromptBrowser::DTNumberOfModels, Qt::DisplayRole, number_of_models);
                 continue;
             }
-            QTreeWidgetItem* child = new QTreeWidgetItem();
+            auto *child = new QTreeWidgetItem();
             child->setCheckState(HELMPromptBrowser::DTDatasetNameColumn, Qt::Unchecked);
             child->setData(HELMPromptBrowser::DTDatasetNameColumn, Qt::DisplayRole, sub_task);
-            child->setData(HELMPromptBrowser::DTNumberOfModelsPerDatasetColumn, Qt::DisplayRole, number_of_models);
+            child->setData(HELMPromptBrowser::DTNumberOfModels, Qt::DisplayRole, number_of_models);
+            child->setData(HELMPromptBrowser::DTLMListColumn, Qt::DisplayRole, QVariant::fromValue<QList<int>>(model_list));
             item->addChild(child);
         }
         ui->dataset_treeWidget->addTopLevelItem(item);
@@ -489,7 +499,8 @@ void MainWindow::on_filterByNumber_checkBox_checkStateChanged(const Qt::CheckSta
         ui->filterByNumber_modelNumber_spinBox->setEnabled(true);
         ui->filterByNumber_label1->setEnabled(true);
         ui->filterByNumber_label2->setEnabled(true);
-        ui->filterByNumber_FilterModels_pushButton->setEnabled(true);
+        ui->applyDatasetFilters_pushButton->setEnabled(true);
+        ui->clearDatasetFilters_pushButton->setEnabled(true);
     }
     else {
         ui->filterByNumber_modelNumber_spinBox->setEnabled(false);
@@ -497,35 +508,24 @@ void MainWindow::on_filterByNumber_checkBox_checkStateChanged(const Qt::CheckSta
         ui->filterByNumber_label2->setEnabled(false);
 
         if (ui->filterBySize_checkBox->checkState() == Qt::Unchecked && ui->filterByVendor_checkBox->checkState() == Qt::Unchecked) {
-            ui->filterByNumber_FilterModels_pushButton->setEnabled(false);
+            ui->applyDatasetFilters_pushButton->setEnabled(false);
+            ui->clearDatasetFilters_pushButton->setEnabled(false);
+            on_clearDatasetFilters_pushButton_clicked();
         }
-
-        const auto enable_all_datasets = [&](QTreeWidgetItem* item) -> void {
-            if (item == nullptr) {
-                return;
-            }
-            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-            item->setBackground(0, Qt::NoBrush);
-
-            if (item->parent() != nullptr) {
-                QTreeWidgetItem* parent = item->parent();
-                parent->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-                parent->setBackground(0, Qt::NoBrush);
-            }
-        };
-
-        transformDatasetTree(ui->dataset_treeWidget, enable_all_datasets);
     }
 }
 
 void MainWindow::on_filterBySize_checkBox_checkStateChanged(const Qt::CheckState &arg1)
 {
     if (arg1 == Qt::Checked) {
+        ui->filterBySize_ReallyTiny_radioButton->setEnabled(true);
+        ui->filterBySize_Tiny_radioButton->setEnabled(true);
         ui->filterBySize_Small_radioButton->setEnabled(true);
         ui->filterBySize_Medium_radioButton->setEnabled(true);
         ui->filterBySize_Large_radioButton->setEnabled(true);
         ui->filterBySize_CustomInterval_radioButton->setEnabled(true);
-        ui->filterByNumber_FilterModels_pushButton->setEnabled(true);
+        ui->applyDatasetFilters_pushButton->setEnabled(true);
+        ui->clearDatasetFilters_pushButton->setEnabled(true);
         if (ui->filterBySize_CustomInterval_radioButton->isChecked()) {
             ui->filterBySize_CustomInterval_min_comboBox->setEnabled(true);
             ui->filterBySize_CustomInterval_max_comboBox->setEnabled(true);
@@ -536,12 +536,16 @@ void MainWindow::on_filterBySize_checkBox_checkStateChanged(const Qt::CheckState
         }
     }
     else {
+        ui->filterBySize_ReallyTiny_radioButton->setEnabled(false);
+        ui->filterBySize_Tiny_radioButton->setEnabled(false);
         ui->filterBySize_Small_radioButton->setEnabled(false);
         ui->filterBySize_Medium_radioButton->setEnabled(false);
         ui->filterBySize_Large_radioButton->setEnabled(false);
         ui->filterBySize_CustomInterval_radioButton->setEnabled(false);
         if (ui->filterByNumber_checkBox->checkState() == Qt::Unchecked && ui->filterByVendor_checkBox->checkState() == Qt::Unchecked) {
-            ui->filterByNumber_FilterModels_pushButton->setEnabled(false);
+            ui->applyDatasetFilters_pushButton->setEnabled(false);
+            ui->clearDatasetFilters_pushButton->setEnabled(false);
+            on_clearDatasetFilters_pushButton_clicked();
         }
         ui->filterBySize_CustomInterval_min_comboBox->setEnabled(false);
         ui->filterBySize_CustomInterval_max_comboBox->setEnabled(false);
@@ -1149,14 +1153,133 @@ void MainWindow::on_clearCID_pushButton_clicked()
 void MainWindow::on_filterByVendor_checkBox_checkStateChanged(const Qt::CheckState &arg1)
 {
     if (arg1 == Qt::Checked) {
-        ui->filterByVendor_comboBox->setEnabled(true);
-        ui->filterByNumber_FilterModels_pushButton->setEnabled(true);
+        ui->filterByVendor_pushButton->setEnabled(true);
+        ui->applyDatasetFilters_pushButton->setEnabled(true);
+        ui->clearDatasetFilters_pushButton->setEnabled(true);
     }
     else {
-        ui->filterByVendor_comboBox->setEnabled(false);
+        ui->filterByVendor_pushButton->setEnabled(false);
         if (ui->filterBySize_checkBox->checkState() == Qt::Unchecked && ui->filterByNumber_checkBox->checkState() == Qt::Unchecked) {
-            ui->filterByNumber_FilterModels_pushButton->setEnabled(false);
+            ui->applyDatasetFilters_pushButton->setEnabled(false);
+            ui->clearDatasetFilters_pushButton->setEnabled(false);
+            on_clearDatasetFilters_pushButton_clicked();
         }
     }
+}
+
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    writeSettings();
+    event->accept();
+}
+
+void MainWindow::writeSettings()
+{
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "IIF-SADAF-CONICET", "HELMPromptBrowser");
+
+    settings.setValue("HELM_Path", m_helmDataPath);
+    settings.setValue("Output_Path", m_outputPath);
+    settings.setValue("JSONFile", m_jsonFileName);
+    settings.setValue("CompilationName", m_compilationName);
+    settings.setValue("HELM_JSON", m_helmDataJSON);
+    settings.setValue("IMPORT_JSON_FOLDER", m_importFileFolder);
+    settings.setValue("DontShowAgainSearch", m_DontShowEmptySearchMessage);
+}
+
+void MainWindow::readSettings()
+{
+    const QSettings settings(QSettings::IniFormat, QSettings::UserScope, "IIF-SADAF-CONICET", "HELMPromptBrowser");
+
+    m_helmDataPath = settings.value("HELM_Path").toString();
+    m_importFileFolder = settings.value("IMPORT_JSON_FOLDER").toString();
+    m_outputPath = settings.value("Output_Path").toString();
+
+    m_helmDataJSON = settings.value("HELM_JSON").toString();
+    m_jsonFileName = settings.value("JSONFile").toString();
+
+    m_compilationName = settings.value("CompilationName").toString();
+    m_DontShowEmptySearchMessage = settings.value("DontShowAgainSearch").toBool();
+
+    if (!QDir(m_importFileFolder).exists()) {
+        m_importFileFolder = QStandardPaths::displayName(QStandardPaths::DocumentsLocation);
+    }
+
+    if (!QDir(m_helmDataPath).exists()) {
+        m_helmDataPath.clear();
+    }
+
+    if (!QFile(m_helmDataJSON).exists()) {
+        m_helmDataJSON.clear();
+    }
+}
+
+void MainWindow::on_filterPromptsByCID_pushButton_clicked()
+{
+    const QString cid = ui->filterPromptsByCID_lineEdit->text();
+
+    const auto filter = [&](QTreeWidgetItem* item) -> void {
+        if (!isPrompt(item)) {
+            const size_t child_count = item->childCount();
+            bool all_children_hidden = true;
+            for (size_t i = 0; i < child_count; ++i) {
+                if (!item->child(i)->isHidden()) {
+                    all_children_hidden = false;
+                    break;
+                }
+            }
+            if (all_children_hidden) {
+                item->setHidden(true);
+            }
+            return;
+        }
+
+        if (getCID(item) != cid) {
+            item->setHidden(true);
+        }
+        else {
+            item->setHidden(false);
+        }
+    };
+    transformPromptTree(ui->prompts_treeWidget, filter);
+
+    ui->prompts_treeWidget->expandAll();
+}
+
+
+void MainWindow::on_clearPromptFilter_pushButton_clicked()
+{
+    const auto show_all= [&](QTreeWidgetItem* item) -> void {
+        item->setHidden(false);
+    };
+    transformPromptTree(ui->prompts_treeWidget, show_all);
+}
+
+
+void MainWindow::on_clearDatasetFilters_pushButton_clicked()
+{
+    const auto enable_all_datasets = [&](QTreeWidgetItem* item) -> void {
+        if (item == nullptr) {
+            return;
+        }
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setHidden(false);
+
+        if (item->parent() != nullptr) {
+            QTreeWidgetItem* parent = item->parent();
+            parent->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+            parent->setHidden(false);
+        }
+    };
+
+    transformDatasetTree(ui->dataset_treeWidget, enable_all_datasets);
+}
+
+
+void MainWindow::on_filterByVendor_pushButton_clicked()
+{
+    VendorDialog* dialog = new VendorDialog(m_VendorFilterList);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->exec();
 }
 

@@ -28,6 +28,10 @@ set(PROJECT_SOURCES
         src/exportoptionsdialog.cpp
         src/exportoptionsdialog.ui
 
+        src/vendordialog.hpp
+        src/vendordialog.cpp
+        src/vendordialog.ui
+
         src/booleangrammar.hpp
         src/booleangrammar.cpp
         src/booleanparser.cpp
@@ -41,6 +45,9 @@ set(PROJECT_SOURCES
 
         src/helperfunctions.cpp
         src/helperfunctions.hpp
+
+        src/languagemodel.hpp
+        src/languagemodel.cpp
 
         src/hpb_globals.hpp
         src/hpb_globals.cpp
