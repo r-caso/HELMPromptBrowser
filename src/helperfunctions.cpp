@@ -439,8 +439,7 @@ void transformPromptTree(QTreeWidget* promptTree, const std::function<void(QTree
     for (size_t i = 0; i < datasetCount; ++i) {
         QTreeWidgetItem* dataset = promptTree->topLevelItem(i);
         if (!hasSpecifications(dataset)) {
-            const size_t promptCount = dataset->childCount();
-            for (size_t j = 0; j < promptCount; ++j) {
+            for (size_t j = 0; j < dataset->childCount(); ++j) {
                 QTreeWidgetItem* prompt = dataset->child(j);
                 transformation(prompt);
             }
@@ -449,8 +448,7 @@ void transformPromptTree(QTreeWidget* promptTree, const std::function<void(QTree
             const size_t subdatasetCount = dataset->childCount();
             for (size_t j = 0; j < subdatasetCount; ++j) {
                 QTreeWidgetItem* subdataset = dataset->child(j);
-                const size_t promptCount = subdataset->childCount();
-                for (size_t k = 0; k < promptCount; ++k) {
+                for (size_t k = 0; k < subdataset->childCount(); ++k) {
                     QTreeWidgetItem* prompt = subdataset->child(k);
                     transformation(prompt);
                 }
