@@ -466,6 +466,7 @@ void MainWindow::on_search_pushButton_clicked()
 
     const QList<QPair<QList<QString>, QList<QString>>> queries = getQueries(searchTerm);
     const bool searchIsCaseSensitive = ui->search_case_sensitive_checkBox->isChecked();
+    const bool searchIsRegex = ui->searchRegex_checkBox->isChecked();
 
     /************************
      * FINALLY, ADD PROMPTS *
@@ -480,7 +481,7 @@ void MainWindow::on_search_pushButton_clicked()
             return;
         }
 
-        addPromptsToTree(dataset, instances, queries, searchIsCaseSensitive, ui->prompts_treeWidget);
+        addPromptsToTree(dataset, instances, queries, searchIsCaseSensitive, searchIsRegex, ui->prompts_treeWidget);
     }
 
     if (ui->prompts_treeWidget->topLevelItemCount() > 0) {
@@ -697,6 +698,7 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
     Q_ASSERT_X(taskDirs.size() == datasetsToBeAdded.size(), "Taks directories and selected datasets have different cardinalities", "mainwindow.cpp");
     const QList<QPair<QList<QString>, QList<QString>>> queries = {{},{}};
     const bool searchIsCaseSensitive = false;
+    const bool searchIsRegex = false;
     const size_t taskDirscount = taskDirs.count();
 
     for (size_t j = 0; j < taskDirscount; ++j) {
@@ -707,7 +709,7 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
             return;
         }
 
-        addPromptsToTree(dataset, instances, queries, searchIsCaseSensitive, ui->prompts_treeWidget);
+        addPromptsToTree(dataset, instances, queries, searchIsCaseSensitive, searchIsRegex, ui->prompts_treeWidget);
     }
 
     if (ui->prompts_treeWidget->topLevelItemCount() > 0) {
@@ -1177,7 +1179,8 @@ void MainWindow::on_filter_pushButton_clicked()
      ***********************************************/
 
     const QList<QPair<QList<QString>, QList<QString>>> queries = getQueries(filter_term);
-    const bool filteIsCaseSensitive = ui->filter_case_sensitive_checkBox->isChecked();
+    const bool filterIsCaseSensitive = ui->filter_case_sensitive_checkBox->isChecked();
+    const bool filterIsRegex = ui->filterRegex_checkBox->isChecked();
 
     /***************************
      * FINALLY, FILTER PROMPTS *
@@ -1188,7 +1191,7 @@ void MainWindow::on_filter_pushButton_clicked()
             return;
         }
         const QString& prompt = getPrompt(item);
-        if (matches(prompt, queries, filteIsCaseSensitive)) {
+        if (matches(prompt, queries, filterIsCaseSensitive, filterIsRegex)) {
             QTreeWidgetItem* parent = item->parent();
             parent->removeChild(item);
             delete item;

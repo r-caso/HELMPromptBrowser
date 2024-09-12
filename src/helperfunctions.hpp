@@ -43,6 +43,7 @@ void addPromptsToTree(const QString& dataset,
                       const QJsonDocument& instances,
                       const QList<QPair<QStringList, QStringList>>& queries,
                       bool searchIsCaseSensitive,
+                      bool searchIsRegex,
                       QTreeWidget* tree);
 void deleteDatasetFromTree(const QString& dataset_name, QTreeWidget* tree);
 bool hasSelectedPrompts(const QTreeWidgetItem* item);
@@ -66,6 +67,9 @@ QString getReferences(const QTreeWidgetItem* item);
 bool hasSpecifications(const QTreeWidgetItem* item);
 bool isPrompt(const QTreeWidgetItem* item);
 bool isSelected(const QTreeWidgetItem* item);
-bool matches(const QString& prompt, const QList<QPair<QStringList, QStringList>>& queries, const bool caseSensitivity);
+bool matches(const QString& prompt,
+             const QList<QPair<QStringList, QStringList>>& queries,
+             bool searchIsCaseSensitive,
+             bool searchIsRegex);
 void setCID(QTreeWidgetItem* item, const QString& cid);
 void setSelectedStatus(QTreeWidgetItem* item, bool status);

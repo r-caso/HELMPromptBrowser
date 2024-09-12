@@ -1041,13 +1041,6 @@
            <layout class="QVBoxLayout" name="verticalLayout_2">
             <item>
              <layout class="QGridLayout" name="gridLayout_2">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string>Query:</string>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="2">
                <widget class="QLineEdit" name="search_lineEdit">
                 <property name="readOnly">
@@ -1060,6 +1053,13 @@
               </item>
               <item row="2" column="2">
                <layout class="QHBoxLayout" name="horizontalLayout">
+                <item>
+                 <widget class="QCheckBox" name="searchRegex_checkBox">
+                  <property name="text">
+                   <string>Regex</string>
+                  </property>
+                 </widget>
+                </item>
                 <item>
                  <spacer name="horizontalSpacer">
                   <property name="orientation">
@@ -1114,6 +1114,13 @@
                 </property>
                </widget>
               </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>Query:</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </item>
            </layout>
@@ -1127,13 +1134,6 @@
            <layout class="QVBoxLayout" name="verticalLayout_9">
             <item>
              <layout class="QGridLayout" name="gridLayout_3">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Query:</string>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="2">
                <widget class="QLineEdit" name="filter_lineEdit">
                 <property name="readOnly">
@@ -1146,6 +1146,13 @@
               </item>
               <item row="2" column="2">
                <layout class="QHBoxLayout" name="horizontalLayout_2">
+                <item>
+                 <widget class="QCheckBox" name="filterRegex_checkBox">
+                  <property name="text">
+                   <string>Regex</string>
+                  </property>
+                 </widget>
+                </item>
                 <item>
                  <spacer name="horizontalSpacer_3">
                   <property name="orientation">
@@ -1192,6 +1199,13 @@
                  </spacer>
                 </item>
                </layout>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Query:</string>
+                </property>
+               </widget>
               </item>
               <item row="2" column="0">
                <widget class="QCheckBox" name="filter_case_sensitive_checkBox">

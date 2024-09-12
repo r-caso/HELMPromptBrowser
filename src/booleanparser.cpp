@@ -14,6 +14,21 @@ bool BooleanParser::parse(const QString& formula, Expression& expr)
     return sentence(expr);
 }
 
+namespace {
+    bool isPunctuation(QChar c)
+    {
+        return c == '(' || c == ')' || c == '"' || c == ' ';
+    }
+    bool isOperator(QChar c)
+    {
+        return c == '!' || c == '&' || c == '|';
+    }
+    bool isValidQueryChar(QChar c)
+    {
+        return !isPunctuation(c) && !isOperator(c);
+    }
+}
+
 void BooleanParser::tokenize(const QString& formula)
 {
     m_TokenList.push_back({ TokenTypeName[TokenType::START_SYMBOL], TokenType::START_SYMBOL });
@@ -21,14 +36,14 @@ void BooleanParser::tokenize(const QString& formula)
     QStack<QChar> symbol_stack;
 
     for (QChar const c : formula) {
-        if (!c.isLetterOrNumber() && !ident.isEmpty()) {
+        if (!isValidQueryChar(c) && !ident.isEmpty()) {
             if (!symbol_stack.empty()) {
                 continue;
             }
             m_TokenList.push_back({ ident, TokenType::IDENTIFIER });
             ident.clear();
         }
-        if (c.isLetterOrNumber()) {
+        if (isValidQueryChar(c)) {
             ident.push_back(c);
         }
         else if (c == ' ') {

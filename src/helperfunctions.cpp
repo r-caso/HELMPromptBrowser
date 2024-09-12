@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QList>
 #include <QMessageBox>
+#include <QRegularExpression>
 #include <QString>
 #include <QSysInfo>
 #include <QTimer>
@@ -173,7 +174,8 @@ QString prettyPrint(const QJsonObject& obj, const QString& dataset)
 void addPromptsToTree(const QString& dataset,
                       const QJsonDocument& instances,
                       const QList<QPair<QStringList, QStringList>>& queries,
-                      bool searchIsCaseSensitive,
+                      const bool searchIsCaseSensitive,
+                      const bool searchIsRegex,
                       QTreeWidget* tree)
 {
     auto [datasetBase, datasetSpec] = splitDatasetName(dataset);
@@ -224,7 +226,7 @@ void addPromptsToTree(const QString& dataset,
         const QJsonObject obj = instances.array().at(i).toObject();
         const QString prompt = obj["input"].toObject()["text"].toString();
 
-        const bool match = matches(prompt, queries, searchIsCaseSensitive);
+        const bool match = matches(prompt, queries, searchIsCaseSensitive, searchIsRegex);
 
         if (!match) {
             continue;
@@ -377,8 +379,19 @@ bool hasSelectedPrompts(const QTreeWidgetItem* item) {
 
     return hasSelectedPrompts;
 }
-bool matches(const QString& prompt, const QList<QPair<QStringList, QStringList>>& queries, const bool caseSensitivity) {
-    const auto promptMatchesTerm = [&](const QString& term) { return prompt.contains(term, (caseSensitivity ? Qt::CaseSensitive : Qt::CaseInsensitive));};
+bool matches(const QString& prompt,
+             const QList<QPair<QStringList, QStringList>>& queries,
+             bool searchIsCaseSensitive,
+             bool searchIsRegex) {
+    const auto promptMatchesTerm = [&](const QString& term) {
+        if (!searchIsRegex) {
+            return prompt.contains(term, (searchIsCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive));
+        }
+        if (searchIsCaseSensitive) {
+            return prompt.contains(QRegularExpression(term));
+        }
+        return prompt.contains(QRegularExpression(term, QRegularExpression::CaseInsensitiveOption));
+    };
     bool match = false;
 
     for (const auto& query : queries) {
