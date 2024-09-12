@@ -1,8 +1,9 @@
 #pragma once
 
 #include <memory>
-#include <string>
-#include <vector>
+
+#include <QList>
+#include <QString>
 
 enum class Operator : uint8_t { NOT, AND, OR, NIL };
 
@@ -14,20 +15,18 @@ class Expression
 {
 public:
     Expression();
-    Expression(Operator op, const std::string& literal = "", const std::vector<Expression> & = {});
+    Expression(Operator op, const QString& literal = "", const QList<Expression>& = {});
     void setOperator(Operator op);
     void addOperand(const Expression& expr);
-    void addOperands(const std::vector<Expression>& expressions);
+    void addOperands(const QList<Expression>& expressions);
     const Expression& lhs() const;
     const Expression& rhs() const;
     const Expression& scope() const;
-    const std::string& literal() const;
+    const QString& literal() const;
     Operator op() const;
 
 private:
     Operator m_Operator;
-    std::string m_Literal;
-    std::vector<std::shared_ptr<Expression>> m_Children;
+    QString m_Literal;
+    QList<std::shared_ptr<Expression>> m_Children;
 };
-
-std::string print(const Expression& expr);

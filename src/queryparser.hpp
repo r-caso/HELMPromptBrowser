@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QList>
+#include <QPair>
 #include <QString>
 
 bool checkQuery(const QString& queryStr);

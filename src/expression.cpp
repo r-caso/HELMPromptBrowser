@@ -2,11 +2,11 @@
 
 Expression::Expression()
     : m_Operator(Operator::NIL)
-    , m_Literal({})
-    , m_Children({})
+    , m_Literal(QString())
+    , m_Children(QList<std::shared_ptr<Expression>>())
 {}
 
-Expression::Expression(Operator op, const std::string& literal, const std::vector<Expression>& children)
+Expression::Expression(Operator op, const QString& literal, const QList<Expression>& children)
     : m_Operator(op), m_Literal(literal)
 {
     for (const auto& child : children) {
@@ -24,7 +24,7 @@ void Expression::addOperand(const Expression& expr)
     m_Children.push_back(std::make_shared<Expression>(expr));
 }
 
-void Expression::addOperands(const std::vector<Expression>& expressions)
+void Expression::addOperands(const QList<Expression>& expressions)
 {
     for (const Expression& expr : expressions) {
         m_Children.push_back(std::make_shared<Expression>(expr));
@@ -46,7 +46,7 @@ const Expression& Expression::scope() const
     return *m_Children.at(0);
 }
 
-const std::string& Expression::literal() const
+const QString& Expression::literal() const
 {
     return m_Literal;
 }
@@ -54,21 +54,4 @@ const std::string& Expression::literal() const
 Operator Expression::op() const
 {
     return m_Operator;
-}
-
-std::string print(const Expression& expr)
-{
-    if (expr.op() == Operator::NIL) {
-        return expr.literal();
-    }
-    if (expr.op() == Operator::AND) {
-        return "(" + print(expr.lhs()) + " & " + print(expr.rhs()) + ")";
-    }
-    if (expr.op() == Operator::OR) {
-        return "(" + print(expr.lhs()) + " | " + print(expr.rhs()) + ")";
-    }
-    if (expr.op() == Operator::NOT) {
-        return "!" + print(expr.scope());
-    }
-    return "";
 }

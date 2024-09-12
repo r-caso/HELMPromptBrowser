@@ -1,40 +1,42 @@
 #pragma once
 
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include <QString>
+#include <QMap>
+#include <QPair>
+#include <QList>
 
 #include "expression.hpp"
 
 enum class TokenType : uint8_t { START_SYMBOL, END_SYMBOL, LPAREN, RPAREN, AND, OR, NOT, IDENTIFIER, ILLEGAL };
 
-class BooleanParser
-{
+class BooleanParser {
 public:
     BooleanParser();
 
-    bool parse(const std::string& formula, Expression& expr);
+    bool parse(const QString& formula, Expression& expr);
 
 private:
     void advance();
-    bool expect(TokenType type);
+    bool match(TokenType type);
     bool sentence(Expression& expr);
-    bool expression(Expression& expr);
+    bool disjunction(Expression& expr);
+    bool conjunction(Expression& expr);
+    bool negation(Expression& expr);
 
-    void tokenize(const std::string& formula);
+    void tokenize(const QString& formula);
 
     int m_Index;
     TokenType m_Sym;
-    std::vector<std::pair<std::string, TokenType>> m_TokenList;
+    QList<QPair<QString, TokenType>> m_TokenList;
 
-    inline static const std::unordered_map<TokenType, std::string> TokenTypeName = {
-        { TokenType::START_SYMBOL, "<S>" },
-        { TokenType::END_SYMBOL, "<E>" },
-        { TokenType::LPAREN, "lparen" },
-        { TokenType::RPAREN, "rparen" },
-        { TokenType::NOT, "not" },
-        { TokenType::AND, "and" },
-        { TokenType::OR, "or" },
-        { TokenType::ILLEGAL, "illegal" },
-        };
+    inline static const QMap<TokenType, QString> TokenTypeName = {
+        { TokenType::START_SYMBOL, QString("<S>") },
+        { TokenType::END_SYMBOL, QString("<E>") },
+        { TokenType::LPAREN, QString("lparen") },
+        { TokenType::RPAREN, QString("rparen") },
+        { TokenType::NOT, QString("not") },
+        { TokenType::AND, QString("and") },
+        { TokenType::OR, QString("or") },
+        { TokenType::ILLEGAL, QString("illegal") },
+    };
 };

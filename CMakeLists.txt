@@ -32,8 +32,6 @@ set(PROJECT_SOURCES
         src/vendordialog.cpp
         src/vendordialog.ui
 
-        src/booleangrammar.hpp
-        src/booleangrammar.cpp
         src/booleanparser.cpp
         src/booleanparser.hpp
         src/expression.cpp
