@@ -9,7 +9,7 @@ BooleanParser::BooleanParser()
 
 bool BooleanParser::parse(const QString& formula, Expression& expr)
 {
-    expr = Expression();
+    expr.clear();
     tokenize(formula);
     return sentence(expr);
 }
@@ -31,6 +31,7 @@ namespace {
 
 void BooleanParser::tokenize(const QString& formula)
 {
+    m_TokenList.clear();
     m_TokenList.push_back({ TokenTypeName[TokenType::START_SYMBOL], TokenType::START_SYMBOL });
     QString ident{};
     QStack<QChar> symbol_stack;

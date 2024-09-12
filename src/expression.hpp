@@ -24,6 +24,7 @@ public:
     const Expression& scope() const;
     const QString& literal() const;
     Operator op() const;
+    void clear();
 
 private:
     Operator m_Operator;

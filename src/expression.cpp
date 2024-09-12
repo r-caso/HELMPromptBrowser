@@ -55,3 +55,10 @@ Operator Expression::op() const
 {
     return m_Operator;
 }
+
+void Expression::clear()
+{
+    m_Operator = Operator::NIL;
+    m_Literal.clear();
+    m_Children.clear();
+}
