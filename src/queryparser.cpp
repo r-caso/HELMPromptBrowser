@@ -8,6 +8,9 @@
 
 bool checkQuery(const QString& query)
 {
+    if (query.isEmpty()) {
+        return true;
+    }
     return BooleanParser().check(query);
 }
 
@@ -67,6 +70,10 @@ namespace {
 
 QList<QPair<QStringList, QStringList>> getQueries(const QString& queryStr)
 {
+    if (queryStr.isEmpty()) {
+        return { {}, {} };
+    }
+
     Expression expr;
     BooleanParser().parse(queryStr, expr);
     return getQueries(toDNF(expr));
