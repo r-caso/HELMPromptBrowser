@@ -14,6 +14,7 @@ public:
     BooleanParser();
 
     bool parse(const QString& formula, Expression& expr);
+    bool check(const QString& formula);
 
 private:
     void advance();

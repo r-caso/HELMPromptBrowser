@@ -14,6 +14,13 @@ bool BooleanParser::parse(const QString& formula, Expression& expr)
     return sentence(expr);
 }
 
+bool BooleanParser::check(const QString& formula)
+{
+    Expression expr;
+    tokenize(formula);
+    return sentence(expr);
+}
+
 namespace {
     bool isPunctuation(QChar c)
     {

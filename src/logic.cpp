@@ -20,42 +20,44 @@ bool isNegation(const Expression& expr)
     return expr.op() == Operator::NOT;
 }
 
-static bool noOr(const Expression& expr) {
-    if (isAtomic(expr)) {
-        return true;
+namespace {
+    bool noOr(const Expression& expr) {
+        if (isAtomic(expr)) {
+            return true;
+        }
+        if (isNegation(expr)) {
+            return noOr(expr.scope());
+        }
+        if (isDisjunction(expr)) {
+            return false;
+        }
+        return noOr(expr.lhs()) && noOr(expr.rhs());
     }
-    if (isNegation(expr)) {
-        return noOr(expr.scope());
-    }
-    if (isDisjunction(expr)) {
-        return false;
-    }
-    return noOr(expr.lhs()) && noOr(expr.rhs());
-}
 
-static bool noAndAboveOr(const Expression& expr)
-{
-    if (isAtomic(expr)) {
-        return true;
+    bool noAndAboveOr(const Expression& expr)
+    {
+        if (isAtomic(expr)) {
+            return true;
+        }
+        if (isNegation(expr)) {
+            return noAndAboveOr(expr.scope());
+        }
+        if (isDisjunction(expr)) {
+            return noAndAboveOr(expr.lhs()) && noAndAboveOr(expr.rhs());
+        }
+        return noOr(expr.lhs()) && noOr(expr.rhs());
     }
-    if (isNegation(expr)) {
-        return noAndAboveOr(expr.scope());
-    }
-    if (isDisjunction(expr)) {
-        return noAndAboveOr(expr.lhs()) && noAndAboveOr(expr.rhs());
-    }
-    return noOr(expr.lhs()) && noOr(expr.rhs());
-}
 
-static Expression distributeAndOr(const Expression& expr1, const Expression& expr2)
-{
-    if (isDisjunction(expr1)) {
-        return Expression(Operator::OR, "", { distributeAndOr(expr1.lhs(), expr2), distributeAndOr(expr1.rhs(), expr2) });
+    Expression distributeAndOr(const Expression& expr1, const Expression& expr2)
+    {
+        if (isDisjunction(expr1)) {
+            return Expression(Operator::OR, "", { distributeAndOr(expr1.lhs(), expr2), distributeAndOr(expr1.rhs(), expr2) });
+        }
+        if (isDisjunction(expr2)) {
+            return Expression(Operator::OR, "", { distributeAndOr(expr1, expr2.lhs()), distributeAndOr(expr1, expr2.rhs()) });
+        }
+        return Expression(Operator::AND, "", { expr1, expr2 });
     }
-    if (isDisjunction(expr2)) {
-        return Expression(Operator::OR, "", { distributeAndOr(expr1, expr2.lhs()), distributeAndOr(expr1, expr2.rhs()) });
-    }
-    return Expression(Operator::AND, "", { expr1, expr2 });
 }
 
 bool isDNF(const Expression& expr)

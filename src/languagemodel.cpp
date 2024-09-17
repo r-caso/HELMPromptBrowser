@@ -1,7 +1,5 @@
 #include "languagemodel.hpp"
 
-#include <cmath>
-
 namespace HELMPromptBrowser {
 
 LanguageModel::LanguageModel(const int id, const QString& name, const double parameters)
