@@ -181,5 +181,5 @@ bool BooleanParser::negation(Expression& expr)
         }
         return match(TokenType::RPAREN);
     }
-    return true;
+    return false;
 }
