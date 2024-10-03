@@ -22,7 +22,7 @@ void Warn(const QString& message);
 
 QJsonObject getDatasetObj(const QTreeWidgetItem* item, const QString& datasetBase, const QString& datasetSpec, const QJsonObject& helmDataJson);
 QJsonObject getSamples(const QTreeWidgetItem* item);
-QJsonDocument getTaskInstances(const QString& task_dir, const QString& helmDataPath);
+QJsonDocument getTaskInstances(const QString& taskDir, const QString& helmDataPath);
 QJsonObject loadHelmDataConfig(const QString& helmDataJson);
 QString prettyPrint(const QJsonObject& obj, const QString& dataset);
 
@@ -45,7 +45,7 @@ void addPromptsToTree(const QString& dataset,
                       bool searchIsCaseSensitive,
                       bool searchIsRegex,
                       QTreeWidget* tree);
-void deleteDatasetFromTree(const QString& dataset_name, QTreeWidget* tree);
+void deleteDatasetFromTree(const QString& datasetName, QTreeWidget* tree);
 bool hasSelectedPrompts(const QTreeWidgetItem* item);
 void transformPromptTree(QTreeWidget* promptTree, const std::function<void(QTreeWidgetItem*)>& transformation);
 

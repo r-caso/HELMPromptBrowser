@@ -19,22 +19,22 @@ set(PROJECT_SOURCES
         src/mainwindow.hpp
         src/mainwindow.ui
 
-        src/exportoptionsdialog.hpp
-        src/exportoptionsdialog.cpp
-        src/exportoptionsdialog.ui
+        src/dialogs/exportoptionsdialog.hpp
+        src/dialogs/exportoptionsdialog.cpp
+        src/dialogs/exportoptionsdialog.ui
 
-        src/vendordialog.hpp
-        src/vendordialog.cpp
-        src/vendordialog.ui
+        src/dialogs/vendordialog.hpp
+        src/dialogs/vendordialog.cpp
+        src/dialogs/vendordialog.ui
 
-        src/booleanparser.cpp
-        src/booleanparser.hpp
-        src/expression.cpp
-        src/expression.hpp
-        src/logic.cpp
-        src/logic.hpp
-        src/queryparser.hpp
-        src/queryparser.cpp
+        src/parser/booleanparser.cpp
+        src/parser/booleanparser.hpp
+        src/parser/expression.cpp
+        src/parser/expression.hpp
+        src/parser/logic.cpp
+        src/parser/logic.hpp
+        src/parser/queryparser.hpp
+        src/parser/queryparser.cpp
 
         src/helperfunctions.cpp
         src/helperfunctions.hpp
@@ -43,11 +43,12 @@ set(PROJECT_SOURCES
         src/languagemodel.cpp
 
         src/hpb_globals.hpp
-        src/hpb_globals.cpp
 )
 
 include_directories(
     src
+    src/dialogs
+    src/parser
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

@@ -93,7 +93,7 @@ QJsonObject getSamples(const QTreeWidgetItem* item)
     const int childCount = item->childCount();
     for (int i = 0; i < childCount; ++i) {
         const QTreeWidgetItem* child = item->child(i);
-        if (child->data(HELMPromptBrowser::PTIsSelectedColumn, Qt::DisplayRole).toBool()) {
+        if (child->data(HPB::PTIsSelectedColumn, Qt::DisplayRole).toBool()) {
             samples.insert(getPID(child), getCID(child));
         }
     }
@@ -182,11 +182,11 @@ void addPromptsToTree(const QString& dataset,
 
     QList<QTreeWidgetItem*> const baseItems = tree->findItems(datasetBase,
                                                                     Qt::MatchExactly,
-                                                                    HELMPromptBrowser::PTNameIDColumn);
+                                                                    HPB::PTNameIDColumn);
     QList<QTreeWidgetItem*> specItems;
 
     if (!datasetSpec.isEmpty()) {
-        specItems = tree->findItems(datasetSpec, Qt::MatchExactly | Qt::MatchRecursive, HELMPromptBrowser::PTNameIDColumn);
+        specItems = tree->findItems(datasetSpec, Qt::MatchExactly | Qt::MatchRecursive, HPB::PTNameIDColumn);
     }
 
     QTreeWidgetItem* baseItem = nullptr;
@@ -196,13 +196,13 @@ void addPromptsToTree(const QString& dataset,
     }
     else {
         baseItem = new QTreeWidgetItem();
-        baseItem->setData(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole, datasetBase);
-        baseItem->setData(HELMPromptBrowser::PTIsPromptColumn, Qt::DisplayRole, false);
+        baseItem->setData(HPB::PTNameIDColumn, Qt::DisplayRole, datasetBase);
+        baseItem->setData(HPB::PTIsPromptColumn, Qt::DisplayRole, false);
         if (datasetSpec.isEmpty()) {
-            baseItem->setData(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole, false);
+            baseItem->setData(HPB::PTHasSpecificationsColumn, Qt::DisplayRole, false);
         }
         else {
-            baseItem->setData(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole, true);
+            baseItem->setData(HPB::PTHasSpecificationsColumn, Qt::DisplayRole, true);
         }
     }
 
@@ -213,16 +213,16 @@ void addPromptsToTree(const QString& dataset,
         }
         else {
             specItem = new QTreeWidgetItem();
-            specItem->setData(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole, datasetSpec);
-            specItem->setData(HELMPromptBrowser::PTIsPromptColumn, Qt::DisplayRole, false);
-            specItem->setData(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole, false);
+            specItem->setData(HPB::PTNameIDColumn, Qt::DisplayRole, datasetSpec);
+            specItem->setData(HPB::PTIsPromptColumn, Qt::DisplayRole, false);
+            specItem->setData(HPB::PTHasSpecificationsColumn, Qt::DisplayRole, false);
         }
     }
 
     QTreeWidgetItem* parent = specItem != nullptr ? specItem : baseItem;
 
-    const size_t instanceCount = instances.array().count();
-    for (size_t i = 0; i < instanceCount; ++i) {
+    const int instanceCount = static_cast<int>(instances.array().count());
+    for (int i = 0; i < instanceCount; ++i) {
         const QJsonObject obj = instances.array().at(i).toObject();
         const QString prompt = obj["input"].toObject()["text"].toString();
 
@@ -235,7 +235,7 @@ void addPromptsToTree(const QString& dataset,
         const QString promptId = obj["id"].toString();
 
         bool promptIsInTree = false;
-        const size_t numberOfPrompts = parent->childCount();
+        const int numberOfPrompts = parent->childCount();
         for (int j = 0; j < numberOfPrompts; ++j) {
             QTreeWidgetItem* prompt = parent->child(j);
             if (getPID(prompt) == promptId) {
@@ -249,16 +249,16 @@ void addPromptsToTree(const QString& dataset,
 
         auto *child = new QTreeWidgetItem();
         child->setFlags(child->flags() | Qt::ItemIsEditable);
-        child->setBackground(HELMPromptBrowser::PTCIDColumn, Qt::lightGray);
-        child->setForeground(HELMPromptBrowser::PTNameIDColumn, Qt::darkGray);
-        child->setData(HELMPromptBrowser::PTCIDColumn, Qt::DisplayRole, "");
-        child->setData(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole, promptId);
-        child->setData(HELMPromptBrowser::PTDatasetBaseColumn, Qt::DisplayRole, datasetBase);
-        child->setData(HELMPromptBrowser::PTDatasetSpecColumn, Qt::DisplayRole, datasetSpec);
-        child->setData(HELMPromptBrowser::PTIsPromptColumn, Qt::DisplayRole, true);
-        child->setData(HELMPromptBrowser::PTPromptContentsColumn, Qt::DisplayRole, prettyPrint(obj, dataset));
-        child->setData(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole, false);
-        child->setData(HELMPromptBrowser::PTIsSelectedColumn, Qt::DisplayRole, false);
+        child->setBackground(HPB::PTCIDColumn, Qt::lightGray);
+        child->setForeground(HPB::PTNameIDColumn, Qt::darkGray);
+        child->setData(HPB::PTCIDColumn, Qt::DisplayRole, "");
+        child->setData(HPB::PTNameIDColumn, Qt::DisplayRole, promptId);
+        child->setData(HPB::PTDatasetBaseColumn, Qt::DisplayRole, datasetBase);
+        child->setData(HPB::PTDatasetSpecColumn, Qt::DisplayRole, datasetSpec);
+        child->setData(HPB::PTIsPromptColumn, Qt::DisplayRole, true);
+        child->setData(HPB::PTPromptContentsColumn, Qt::DisplayRole, prettyPrint(obj, dataset));
+        child->setData(HPB::PTHasSpecificationsColumn, Qt::DisplayRole, false);
+        child->setData(HPB::PTIsSelectedColumn, Qt::DisplayRole, false);
         parent->addChild(child);
     }
 
@@ -369,8 +369,8 @@ QStringList getSelectedDatasetNames(const QTreeWidget* tree)
 bool hasSelectedPrompts(const QTreeWidgetItem* item) {
     bool hasSelectedPrompts = false;
 
-    const size_t promptCount = item->childCount();
-    for (size_t i = 0; i < promptCount; ++i) {
+    const int promptCount = item->childCount();
+    for (int i = 0; i < promptCount; ++i) {
         if (isSelected(item->child(i))) {
             hasSelectedPrompts = true;
             break;
@@ -429,39 +429,39 @@ QPair<QString, QString> splitDatasetName(const QString& dataset)
         datasetSpec = {};
     }
 
-    return {datasetBase, datasetSpec};
+    return { datasetBase, datasetSpec };
 }
 void transformDatasetTree(QTreeWidget* datasetTree, const std::function<void(QTreeWidgetItem*)>& transformation)
 {
-    const size_t datasetCount = datasetTree->topLevelItemCount();
-    for (size_t i = 0; i < datasetCount; ++i) {
+    const int datasetCount = datasetTree->topLevelItemCount();
+    for (int i = 0; i < datasetCount; ++i) {
         QTreeWidgetItem* dataset = datasetTree->topLevelItem(i);
         if (dataset->childCount() == 0) {
             transformation(dataset);
             continue;
         }
-        const size_t specificationCount = dataset->childCount();
-        for (size_t j = 0; j < specificationCount; ++j) {
+        const int specificationCount = dataset->childCount();
+        for (int j = 0; j < specificationCount; ++j) {
             transformation(dataset->child(j));
         }
     }
 }
 void transformPromptTree(QTreeWidget* promptTree, const std::function<void(QTreeWidgetItem*)>& transformation)
 {
-    const size_t datasetCount = promptTree->topLevelItemCount();
-    for (size_t i = 0; i < datasetCount; ++i) {
+    const int datasetCount = promptTree->topLevelItemCount();
+    for (int i = 0; i < datasetCount; ++i) {
         QTreeWidgetItem* dataset = promptTree->topLevelItem(i);
         if (!hasSpecifications(dataset)) {
-            for (size_t j = 0; j < dataset->childCount(); ++j) {
+            for (int j = 0; j < dataset->childCount(); ++j) {
                 QTreeWidgetItem* prompt = dataset->child(j);
                 transformation(prompt);
             }
         }
         else {
-            const size_t subdatasetCount = dataset->childCount();
-            for (size_t j = 0; j < subdatasetCount; ++j) {
+            const int subdatasetCount = dataset->childCount();
+            for (int j = 0; j < subdatasetCount; ++j) {
                 QTreeWidgetItem* subdataset = dataset->child(j);
-                for (size_t k = 0; k < subdataset->childCount(); ++k) {
+                for (int k = 0; k < subdataset->childCount(); ++k) {
                     QTreeWidgetItem* prompt = subdataset->child(k);
                     transformation(prompt);
                 }
@@ -477,59 +477,59 @@ void transformPromptTree(QTreeWidget* promptTree, const std::function<void(QTree
 
 QString getCID(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTCIDColumn, Qt::DisplayRole).toString();
+    return item->data(HPB::PTCIDColumn, Qt::DisplayRole).toString();
 }
 QString getDatasetBase(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTDatasetBaseColumn, Qt::DisplayRole).toString();
+    return item->data(HPB::PTDatasetBaseColumn, Qt::DisplayRole).toString();
 }
 QString getDatasetSpec(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTDatasetSpecColumn, Qt::DisplayRole).toString();
+    return item->data(HPB::PTDatasetSpecColumn, Qt::DisplayRole).toString();
 }
 QString getName(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole).toString();
+    return item->data(HPB::PTNameIDColumn, Qt::DisplayRole).toString();
 }
 QString getPID(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTNameIDColumn, Qt::DisplayRole).toString();
+    return item->data(HPB::PTNameIDColumn, Qt::DisplayRole).toString();
 }
 QString getPrompt(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTPromptContentsColumn, Qt::DisplayRole).toString();
+    return item->data(HPB::PTPromptContentsColumn, Qt::DisplayRole).toString();
 }
 QString getReferences(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTReferencesColumn, Qt::DisplayRole).toString();
+    return item->data(HPB::PTReferencesColumn, Qt::DisplayRole).toString();
 }
 bool hasSpecifications(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTHasSpecificationsColumn, Qt::DisplayRole).toBool();
+    return item->data(HPB::PTHasSpecificationsColumn, Qt::DisplayRole).toBool();
 }
 bool isPrompt(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTIsPromptColumn, Qt::DisplayRole).toBool();
+    return item->data(HPB::PTIsPromptColumn, Qt::DisplayRole).toBool();
 }
 bool isSelected(const QTreeWidgetItem* item)
 {
-    return item->data(HELMPromptBrowser::PTIsSelectedColumn, Qt::DisplayRole).toBool();
+    return item->data(HPB::PTIsSelectedColumn, Qt::DisplayRole).toBool();
 }
 void setCID(QTreeWidgetItem* item, const QString& cid)
 {
-    item->setData(HELMPromptBrowser::PTCIDColumn, Qt::DisplayRole, cid);
+    item->setData(HPB::PTCIDColumn, Qt::DisplayRole, cid);
 }
 void setSelectedStatus(QTreeWidgetItem* item, bool status)
 {
-    item->setData(HELMPromptBrowser::PTIsSelectedColumn, Qt::DisplayRole, status);
+    item->setData(HPB::PTIsSelectedColumn, Qt::DisplayRole, status);
     if (status) {
-        item->setForeground(HELMPromptBrowser::PTNameIDColumn, Qt::black);
-        item->setBackground(HELMPromptBrowser::PTCIDColumn, Qt::blue);
-        item->setForeground(HELMPromptBrowser::PTCIDColumn, Qt::white);
+        item->setForeground(HPB::PTNameIDColumn, Qt::black);
+        item->setBackground(HPB::PTCIDColumn, Qt::blue);
+        item->setForeground(HPB::PTCIDColumn, Qt::white);
     }
     else {
-        item->setForeground(HELMPromptBrowser::PTNameIDColumn, Qt::darkGray);
-        item->setBackground(HELMPromptBrowser::PTCIDColumn, Qt::lightGray);
-        item->setForeground(HELMPromptBrowser::PTCIDColumn, Qt::black);
+        item->setForeground(HPB::PTNameIDColumn, Qt::darkGray);
+        item->setBackground(HPB::PTCIDColumn, Qt::lightGray);
+        item->setForeground(HPB::PTCIDColumn, Qt::black);
     }
 }

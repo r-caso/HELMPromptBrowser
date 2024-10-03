@@ -5,7 +5,7 @@
 
 namespace Ui {
 class VendorDialog;
-}
+} // namespace Ui
 
 class VendorDialog : public QDialog
 {
@@ -13,7 +13,7 @@ class VendorDialog : public QDialog
 
 public:
     explicit VendorDialog(QList<int>& vendorList, QWidget *parent = nullptr);
-    ~VendorDialog();
+    ~VendorDialog() override;
 
 private slots:
     void on_buttonBox_accepted();

@@ -4,7 +4,7 @@
 
 namespace Ui {
 class ExportOptionsDialog;
-}
+} // namespace Ui
 
 class ExportOptionsDialog : public QDialog
 {

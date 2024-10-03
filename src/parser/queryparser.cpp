@@ -18,11 +18,11 @@ namespace {
     QPair<QStringList, QStringList> getQueryLists(const Expression& expression)
     {
         if (isAtomic(expression)) {
-            QStringList inclusions{ expression.literal() };
+            QStringList const inclusions{expression.literal()};
             return { inclusions, {} };
         }
         if (isNegation(expression)) {
-            QStringList exclusions{ expression.scope().literal() };
+            QStringList const exclusions{expression.scope().literal()};
             return { {}, exclusions };
         }
         if (isConjunction(expression)) {
@@ -66,7 +66,7 @@ namespace {
         std::ranges::merge(lhs_queries, rhs_queries, std::back_inserter(queries));
         return queries;
     }
-}
+    } // namespace
 
 QList<QPair<QStringList, QStringList>> getQueries(const QString& queryStr)
 {

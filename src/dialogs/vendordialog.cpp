@@ -37,7 +37,7 @@ VendorDialog::VendorDialog(QList<int>& vendorList, QWidget *parent)
     }
 
     if (!m_VendorList.isEmpty()) {
-        for (int i : m_VendorList) {
+        for (const int i : m_VendorList) {
             ui->listWidget->item(i)->setCheckState(Qt::Checked);
         }
     }
@@ -52,8 +52,8 @@ void VendorDialog::on_buttonBox_accepted()
 {
     m_VendorList.clear();
 
-    const size_t numberOfRows = ui->listWidget->count();
-    for (size_t i = 0; i < numberOfRows; ++i) {
+    const int numberOfRows = ui->listWidget->count();
+    for (int i = 0; i < numberOfRows; ++i) {
         if (ui->listWidget->item(i)->checkState() == Qt::Checked) {
             m_VendorList.push_back(i);
         }
@@ -65,8 +65,8 @@ void VendorDialog::on_buttonBox_accepted()
 
 void VendorDialog::on_clearAll_pushButton_clicked()
 {
-    const size_t numberOfRows = ui->listWidget->count();
-    for (size_t i = 0; i < numberOfRows; ++i) {
+    const int numberOfRows = ui->listWidget->count();
+    for (int i = 0; i < numberOfRows; ++i) {
         ui->listWidget->item(i)->setCheckState(Qt::Unchecked);
     }
 }
@@ -74,8 +74,8 @@ void VendorDialog::on_clearAll_pushButton_clicked()
 
 void VendorDialog::on_selectAll_pushButton_clicked()
 {
-    const size_t numberOfRows = ui->listWidget->count();
-    for (size_t i = 0; i < numberOfRows; ++i) {
+    const int numberOfRows = ui->listWidget->count();
+    for (int i = 0; i < numberOfRows; ++i) {
         ui->listWidget->item(i)->setCheckState(Qt::Checked);
     }
 }

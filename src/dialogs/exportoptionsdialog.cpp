@@ -48,7 +48,7 @@ void ExportOptionsDialog::on_export_path_pushButton_clicked()
 
 void ExportOptionsDialog::on_helmDataJSON_pushButton_clicked()
 {
-    m_helmDataJSON = QFileDialog::getOpenFileName(this, "Select helm_data.json", QStandardPaths::displayName(QStandardPaths::DocumentsLocation), "*.json");
+    m_helmDataJSON = QFileDialog::getOpenFileName(this, "Select helm_tests.json", QStandardPaths::displayName(QStandardPaths::DocumentsLocation), "*.json");
     ui->helmDataJSON_lineEdit->setText(m_helmDataJSON);
 }
 
