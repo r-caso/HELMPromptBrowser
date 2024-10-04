@@ -76,7 +76,7 @@ QJsonObject getDatasetObj(const QTreeWidgetItem* item, const QString& datasetBas
 
     QJsonObject datasetSpecification;
     QJsonObject const samples = getSamples(item);
-    datasetSpecification.insert("datasetSpec", datasetSpec);
+    datasetSpecification.insert("dataset_spec", datasetSpec);
     datasetSpecification.insert("metric", metric);
     datasetSpecification.insert("split", split);
     datasetSpecification.insert("samples", samples);
