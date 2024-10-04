@@ -1,12 +1,15 @@
 #pragma once
 
 #include <functional>
+#include <ranges>
 
 #include <QJsonObject>
 #include <QString>
 #include <QStringList>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
+
+inline auto _range = [] (auto min, auto max) { return std::views::iota(min, max); };
 
 /*****************
  * QMessageBoxes *
