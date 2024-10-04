@@ -362,6 +362,7 @@ MainWindow::MainWindow(QWidget *parent)
         for (const auto& [subTask, numberOfModels, modelList]  : vector) {
             if (subTask.isEmpty()) {
                 item->setData(HPB::DTNumberOfModels, Qt::DisplayRole, numberOfModels);
+                item->setData(HPB::DTLMListColumn, Qt::DisplayRole, QVariant::fromValue<QList<int>>(modelList));
                 continue;
             }
             auto *child = new QTreeWidgetItem();
