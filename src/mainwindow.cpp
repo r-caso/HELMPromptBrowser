@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <map>
+#include <ranges>
 #include <tuple>
 
 #include <QCompleter>
@@ -350,7 +351,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->dataset_treeWidget->setColumnCount(HPB::DTColumnCount);
 
-    for (int i = HPB::DTNumberOfModels; i < HPB::DTColumnCount; ++i) {
+    for (int i : _range(HPB::DTNumberOfModels, HPB::DTColumnCount)) {
         ui->dataset_treeWidget->hideColumn(i);
     }
 
@@ -381,7 +382,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->prompts_treeWidget->setColumnCount(HPB::PTColumnCount);
     ui->prompts_treeWidget->setHeaderLabels({"Custom Dataset ID", "Dataset name / Prompt ID"});
-    for (int i = HPB::PTDatasetBaseColumn; i < HPB::PTColumnCount; ++i) {
+    for (int i : _range(HPB::PTDatasetBaseColumn, HPB::PTColumnCount)) {
         ui->prompts_treeWidget->hideColumn(i);
     }
     ui->prompts_treeWidget->setColumnWidth(HPB::PTCIDColumn, 120);
@@ -431,19 +432,104 @@ void MainWindow::on_HELM_Data_pushButton_clicked()
 
 void MainWindow::on_select_all_pushButton_clicked()
 {
-    for (int i = 0; i < ui->dataset_treeWidget->topLevelItemCount(); ++i) {
-        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HPB::DTDatasetNameColumn, Qt::Checked);
-    }
+    const auto checkDataset = [&](QTreeWidgetItem* dataset) -> void { dataset->setCheckState(HPB::DTDatasetNameColumn, Qt::Checked); };
+    transformDatasetTree(ui->dataset_treeWidget, checkDataset);
 }
 void MainWindow::on_deselect_all_pushButton_clicked()
 {
-    for (int i = 0; i < ui->dataset_treeWidget->topLevelItemCount(); ++i) {
-        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HPB::DTDatasetNameColumn, Qt::Unchecked);
+    const auto uncheckDataset = [&](QTreeWidgetItem* dataset) -> void { dataset->setCheckState(HPB::DTDatasetNameColumn, Qt::Unchecked); };
+    transformDatasetTree(ui->dataset_treeWidget, uncheckDataset);
+}
+
+namespace {
+    QPair<QMap<QString, QStringList>, QList<std::tuple<QString, QString, QMap<QString, QString>>>> extractDataFromJSON(QFile& jsonFile)
+    {
+        const QJsonDocument customCompilation = QJsonDocument::fromJson(jsonFile.readAll());
+
+        /*
+         * Import JSON structure:
+         *
+         * customCompilation
+         *    +- mainObject
+         *         +- compilationName
+         *         +- datasetArray
+         *              +- anonymous_obj
+         *                   +- dataset_base
+         *                        +- dataset_spec
+         *                        +- split
+         *                        +- metric
+         *                        +- samples
+         *                             +- CID
+         *                             +- CID
+         *              +- anonymous_obj
+         *                   +- ...
+         *              +- ...
+         */
+
+        const QJsonArray datasetArray = customCompilation["datasets"].toArray();
+
+        QMap<QString, QStringList> selectedDatasets;
+        QList<std::tuple<QString, QString, QMap<QString, QString>>> selectedPrompts;
+
+        for (auto&& value : datasetArray) {
+            const QJsonObject dataset = value.toObject();
+            const QString datasetName = dataset.keys().at(0);
+            const QString datasetSpec = dataset[datasetName]["dataset_spec"].toString();
+
+            if (!selectedDatasets.contains(datasetName)) {
+                selectedDatasets[datasetName] = {};
+            }
+            if (datasetSpec.isEmpty()) {
+                continue;
+            }
+            if (datasetName == "legal_support") {
+                selectedDatasets[datasetName].push_back(datasetName + "," + datasetSpec);
+            }
+            else {
+                selectedDatasets[datasetName].push_back(datasetName + ":" + datasetSpec);
+            }
+
+            const QJsonObject samples = dataset[datasetName]["samples"].toObject();
+            QMap<QString, QString> selected;
+            std::ranges::for_each(samples.keys(), [&](const QString& promptId) { selected[promptId] = samples[promptId].toString(); });
+            selectedPrompts.push_back({ datasetName, datasetSpec, selected });
+        }
+
+        return { selectedDatasets, selectedPrompts };
+    }
+
+    void restoreDatasetSelection(const QMap<QString, QStringList>& selectedDatasets, QTreeWidget* datasetTree)
+    {
+        const auto uncheckDataset = [&](QTreeWidgetItem* dataset) -> void { dataset->setCheckState(HPB::DTDatasetNameColumn, Qt::Unchecked); };
+        transformDatasetTree(datasetTree, uncheckDataset);
+
+        for (const auto& [datasetName, subDatasets] : selectedDatasets.asKeyValueRange()) {
+            QTreeWidgetItem* dataset = datasetTree->findItems(datasetName, Qt::MatchExactly, HPB::DTDatasetNameColumn).at(0);
+
+            if (subDatasets.isEmpty()) {
+                dataset->setCheckState(0, Qt::Checked);
+                continue;
+            }
+
+            const int childCount = dataset->childCount();
+            for (int i : _range(0, childCount)) {
+                QTreeWidgetItem* child = dataset->child(i);
+                const QString childName = child->data(HPB::DTDatasetNameColumn, Qt::DisplayRole).toString();
+                if (subDatasets.contains(childName)) {
+                    child->setCheckState(HPB::DTDatasetNameColumn, Qt::Checked);
+                }
+            }
+        }
     }
 }
+
 void MainWindow::on_loadFromFile_pushButton_clicked()
 {
-    QString const fromFile = QFileDialog::getOpenFileName(
+    /********************************
+     * 1. Open JSON file for import *
+     ********************************/
+
+    const QString fromFile = QFileDialog::getOpenFileName(
         this,
         "Select custom compilation file",
         m_importFileFolder.isEmpty() ? QStandardPaths::displayName(QStandardPaths::DocumentsLocation)
@@ -451,7 +537,6 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
         "*.json"
         );
 
-    // replace with proper return status check
     if (fromFile.isEmpty()) {
         return;
     }
@@ -466,82 +551,31 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
         return;
     }
 
-    const int datasetCount = ui->dataset_treeWidget->topLevelItemCount();
-    for (int i = 0; i < datasetCount; ++i) {
-        ui->dataset_treeWidget->topLevelItem(i)->setCheckState(HPB::DTDatasetNameColumn, Qt::Unchecked);
-    }
 
-    const QJsonDocument customDataset = QJsonDocument::fromJson(jsonFile.readAll());
-    const QJsonArray datasets = customDataset["datasets"].toArray();
+    /***********************************************
+     * 2. Extract selection and CID data from JSON *
+     ***********************************************/
 
-    QMap<QString, QStringList> tree;
-    QList<std::tuple<QString, QString, QList<QPair<QString, QString>>>> selectedPrompts;
+    const auto [selectedDatasets, selectedPrompts] = extractDataFromJSON(jsonFile);
 
-    for (auto&& value : datasets) {
-        const QJsonObject dataset = value.toObject();
-        const QString datasetName = dataset.keys().at(0);
-        const QString datasetSpec = dataset[datasetName]["dataset_spec"].toString();
 
-        if (!tree.contains(datasetName)) {
-            tree[datasetName] = {};
-        }
-        if (datasetSpec.isEmpty()) {
-            continue;
-        }
-        if (datasetName == "legal_support") {
-            tree[datasetName].push_back(datasetName + "," + datasetSpec);
-        }
-        else {
-            tree[datasetName].push_back(datasetName + ":" + datasetSpec);
-        }
+    /***************************************
+     * 3. Restore dataset selection status *
+     ***************************************/
 
-        const QJsonObject samples = dataset[datasetName]["samples"].toObject();
-        const QStringList promptIds = samples.keys();
-        QList<QPair<QString, QString>> selected;
-        for (const QString& promptId : promptIds) {
-            const QString& cid = samples[promptId].toString();
-            selected.push_back({promptId, cid});
-        }
-        selectedPrompts.push_back({datasetName, datasetSpec, selected});
-    }
+    restoreDatasetSelection(selectedDatasets, ui->dataset_treeWidget);
 
-    for (auto topLevelDataset = tree.cbegin(); topLevelDataset != tree.cend(); ++topLevelDataset) {
-        QList<QTreeWidgetItem *> const matches
-            = ui->dataset_treeWidget->findItems(topLevelDataset.key(), Qt::MatchExactly, HPB::DTDatasetNameColumn);
-        const QStringList& subDatasets = topLevelDataset.value();
 
-        if (subDatasets.isEmpty()) {
-            for (QTreeWidgetItem* item: matches) {
-                item->setCheckState(0, Qt::Checked);
-            }
-        }
-        else {
-            for (QTreeWidgetItem* item: matches) {
-                const size_t childCount = item->childCount();
-                for (int i = 0; i < childCount; ++i) {
-                    QTreeWidgetItem* child = item->child(i);
-                    const QString childName = child->data(HPB::DTDatasetNameColumn, Qt::DisplayRole).toString();
-                    if (subDatasets.contains(childName)) {
-                        child->setCheckState(HPB::DTDatasetNameColumn, Qt::Checked);
-                    }
-                }
-            }
-        }
-    }
-
-    /******************************
-     * CORE PROMPT ADDITION LOGIC *
-     ******************************/
+    /*********************************
+     * 4. Add prompts to prompt tree *
+     *********************************/
 
     const QStringList datasetsToBeAdded = getSelectedDatasetNames(ui->dataset_treeWidget);
     const QStringList taskDirs = getHelmTaskDirs(datasetsToBeAdded, m_helmDataPath);
     Q_ASSERT_X(taskDirs.size() == datasetsToBeAdded.size(), "Taks directories and selected datasets have different cardinalities", "mainwindow.cpp");
-    const QList<QPair<QList<QString>, QList<QString>>> queries = {{},{}};
-    const bool searchIsCaseSensitive = false;
-    const bool searchIsRegex = false;
-    const qsizetype taskDirscount = taskDirs.count();
+    const qsizetype taskDirsCount = taskDirs.count();
 
-    for (qsizetype j = 0; j < taskDirscount; ++j) {
+    for (qsizetype j : _range(0, taskDirsCount)) {
         const QString& dataset = datasetsToBeAdded.at(j);
 
         const QJsonDocument instances = getTaskInstances(taskDirs.at(j), m_helmDataPath);
@@ -549,19 +583,16 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
             return;
         }
 
-        addPromptsToTree(dataset, instances, queries, searchIsCaseSensitive, searchIsRegex, ui->prompts_treeWidget);
+        addPromptsToTree(dataset, instances, {{},{}}, false, false, ui->prompts_treeWidget);
     }
 
-    if (ui->prompts_treeWidget->topLevelItemCount() > 0) {
-        ui->delete_pushButton->setEnabled(true);
-        ui->clear_pushButton->setEnabled(true);
-    }
 
-    /***********************************************
-     * SELECT PROMPTS AND STORE CIDs FOR COMPLETER *
-     ***********************************************/
+    /*******************************************************************
+     * 5. Restore prompt selection status and store CIDs for completer *
+     *******************************************************************/
 
-    const auto isSelected = [&](QTreeWidgetItem* item) -> void {
+    // has a side-effect on m_CIDList
+    const auto restorePromptTreeData = [&](QTreeWidgetItem* item) -> void {
         if (item == nullptr) {
             return;
         }
@@ -574,32 +605,42 @@ void MainWindow::on_loadFromFile_pushButton_clicked()
         const QString promptId = getName(item);
         QString promptCId;
 
-        for (const auto& tuple : selectedPrompts) {
-            if (std::get<0>(tuple) == datasetBase && std::get<1>(tuple) == datasetSpec) {
-                auto pair = std::ranges::find_if(std::get<2>(tuple), [&](const QPair<QString, QString>& p) { return p.first == promptId; });
-                if (pair != std::get<2>(tuple).cend()) {
-                    promptCId = pair->second;
-                    setCID(item, promptCId);
-                    setSelectedStatus(item, true);
-                    if (!m_CIDList.contains(promptCId)) {
-                        m_CIDList.push_back(promptCId);
-                    }
-                }
+        for (const auto& [db, ds, idCIdMap] : selectedPrompts) {
+            if (db != datasetBase || ds != datasetSpec) {
+                continue;
+            }
+
+            if (!idCIdMap.contains(promptId)) {
+                return;
+            }
+
+            promptCId = idCIdMap[promptId];
+            setCID(item, promptCId);
+            setSelectedStatus(item, true);
+
+            if (!m_CIDList.contains(promptCId)) {
+                m_CIDList.push_back(promptCId);
             }
         }
     };
 
     m_CIDList.clear();
-    transformPromptTree(ui->prompts_treeWidget, isSelected);
+    transformPromptTree(ui->prompts_treeWidget, restorePromptTreeData);
     auto* model = dynamic_cast<QStringListModel*>(m_CIDCompleter->model());
     model->setStringList(m_CIDList);
 
-    ui->delete_pushButton->setEnabled(true);
-    ui->clear_pushButton->setEnabled(true);
-    ui->selectPrompt_pushButton->setEnabled(true);
-    ui->deselectPrompt_pushButton->setEnabled(true);
-    ui->assignCID_pushButton->setEnabled(true);
-    ui->clearCID_pushButton->setEnabled(true);
+    /*************************
+     * 6. Manage GUI changes *
+     *************************/
+
+    if (ui->prompts_treeWidget->topLevelItemCount() > 0) {
+        ui->delete_pushButton->setEnabled(true);
+        ui->clear_pushButton->setEnabled(true);
+        ui->selectPrompt_pushButton->setEnabled(true);
+        ui->deselectPrompt_pushButton->setEnabled(true);
+        ui->assignCID_pushButton->setEnabled(true);
+        ui->clearCID_pushButton->setEnabled(true);
+    }
 }
 
 void MainWindow::on_filterByNumber_checkBox_checkStateChanged(const Qt::CheckState &arg1)
@@ -755,11 +796,7 @@ void MainWindow::on_applyDatasetFilters_pushButton_clicked()
     }
 
     const auto filter = [&](QTreeWidgetItem* item) -> void {
-        if (item == nullptr) {
-            return;
-        }
-
-        if (item->isHidden()) {
+        if (item == nullptr || item->isHidden()) {
             return;
         }
 
@@ -771,31 +808,36 @@ void MainWindow::on_applyDatasetFilters_pushButton_clicked()
         for (const auto& model_id_variant : model_id_list_variant) {
             int model_id = model_id_variant.toInt();
             const auto model = std::ranges::find_if(m_Models, [&](const LanguageModel& model) { return model.id() == model_id; });
-            if ((m_VendorFilterList.isEmpty() || m_VendorFilterList.contains(static_cast<int>(model->vendor()))) && model->parameters() >= min && model->parameters() < max) {
+            if ((m_VendorFilterList.isEmpty() || m_VendorFilterList.contains(static_cast<int>(model->vendor()))) && (model->parameters() >= min && model->parameters() < max)) {
                 parameters_in_range = true;
                 tested_on_vendor = true;
                 break;
             }
         }
 
-        if (!has_enough_models || !(parameters_in_range && tested_on_vendor)) {
-            item->setFlags(item->flags() & (~Qt::ItemIsUserCheckable));
-            item->setHidden(true);
+        if (has_enough_models && parameters_in_range && tested_on_vendor) {
+            return;
+        }
 
-            if (item->parent() != nullptr) {
-                QTreeWidgetItem* parent = item->parent();
-                const int childCount = parent->childCount();
-                bool all_children_disabled = true;
-                for (int i = 0; i < childCount; ++i) {
-                    if (!parent->child(i)->isHidden()) {
-                        all_children_disabled = false;
-                    }
-                }
-                if (all_children_disabled) {
-                    parent->setFlags(parent->flags() & (~Qt::ItemIsUserCheckable));
-                    parent->setHidden(true);
-                }
+        item->setFlags(item->flags() & (~Qt::ItemIsUserCheckable));
+        item->setHidden(true);
+
+        if (item->parent() == nullptr) {
+            return;
+        }
+
+        QTreeWidgetItem* parent = item->parent();
+        const int childCount = parent->childCount();
+        bool all_children_disabled = true;
+        for (int i : _range(0, childCount)) {
+            if (!parent->child(i)->isHidden()) {
+                all_children_disabled = false;
+                break;
             }
+        }
+        if (all_children_disabled) {
+            parent->setFlags(parent->flags() & (~Qt::ItemIsUserCheckable));
+            parent->setHidden(true);
         }
     };
 
@@ -877,7 +919,7 @@ void MainWindow::on_search_pushButton_clicked()
      ************************/
 
     const qsizetype taskDirscount = taskDirs.count();
-    for (qsizetype j = 0; j < taskDirscount; ++j) {
+    for (qsizetype j : _range(0,taskDirscount)) {
         const QString& dataset = datasetsToBeAdded.at(j);
 
         const QJsonDocument instances = getTaskInstances(taskDirs.at(j), m_helmDataPath);
@@ -1081,7 +1123,7 @@ void MainWindow::on_filterPromptsByCID_pushButton_clicked()
         if (!isPrompt(item)) {
             const int childCount = item->childCount();
             bool allChildrenHidden = true;
-            for (int i = 0; i < childCount; ++i) {
+            for (int i : _range(0, childCount)) {
                 if (!item->child(i)->isHidden()) {
                     allChildrenHidden = false;
                     break;
@@ -1145,25 +1187,36 @@ void MainWindow::on_exportOptions_pushButton_clicked()
 }
 void MainWindow::on_export_pushButton_clicked()
 {
+    /*
+     * This function is somewhat complex. Here's the layout:
+     *
+     * 1. Ensure that export pre-requisites are met
+     * 2. Open file for export
+     * 3. Load PNYX's `helm_tests.json` file, with HELM test data
+     * 4. Construct JSON document for custom compilation
+     * 5. Write to file and notify the user
+     */
+
+    /*******************************************
+     * 1. Ensure export pre-requisites are met *
+     *******************************************/
+
     if (ui->prompts_treeWidget->topLevelItemCount() == 0) {
         Warn("Nothing to export");
         return;
     }
 
-    // check for incompatible metrics in custom dataset
-    // notify CID change is found
-
-    while (m_outputPath.isEmpty() || m_jsonFileName.isEmpty() || m_compilationName.isEmpty() || m_helmDataJSON.isEmpty()) {
-        auto *options = new ExportOptionsDialog(m_outputPath,
-                                                m_jsonFileName,
-                                                m_compilationName,
-                                                m_helmDataJSON);
-        options->setAttribute(Qt::WA_DeleteOnClose);
-        int const result = options->exec();
+    while (!exportPrerequisitesMet()) {
+        const int result = launchExportOptionsDialog();
+        // ExportOptionsDialog can be accepted only if all fields are filled
         if (result == QDialog::Rejected) {
             return;
         }
     }
+
+    /***************************
+     * 2. open file for export *
+     ***************************/
 
     if (!QDir(m_outputPath).exists()) {
         QDir().mkdir(m_outputPath);
@@ -1176,8 +1229,9 @@ void MainWindow::on_export_pushButton_clicked()
         return;
     }
 
-
-    // Load helm_tests.json
+    /***************************
+     * 3. Load helm_tests.json *
+     ***************************/
 
     QJsonObject const helmDataJson = loadHelmDataConfig(m_helmDataJSON);
     if (helmDataJson.isEmpty()) {
@@ -1185,8 +1239,18 @@ void MainWindow::on_export_pushButton_clicked()
         return;
     }
 
+    /********************************************
+     * 4. Construct JSON for custom compilation *
+     ********************************************/
+
+    // TO-DO
+    // check for incompatible metrics in custom dataset
+    // notify CID change if found
+
+    QJsonDocument customCompilation;
+
     /*
-     * JSON structure:
+     * Output JSON structure:
      *
      * customCompilation
      *    +- mainObject
@@ -1194,7 +1258,6 @@ void MainWindow::on_export_pushButton_clicked()
      *         +- datasetArray
      */
 
-    QJsonDocument customCompilation;
     QJsonObject mainObject;
     QJsonArray datasetArray;
 
@@ -1215,68 +1278,52 @@ void MainWindow::on_export_pushButton_clicked()
      *   +- ...
      */
 
-    QMap<QPair<QString, QString>, QStringList> datasetMetricMap;
+    // construct the array
 
     const int topLevelDatasetCount = ui->prompts_treeWidget->topLevelItemCount();
-    for (int i = 0; i < topLevelDatasetCount; ++i) {
-        QTreeWidgetItem* topLevelDataset = ui->prompts_treeWidget->topLevelItem(i);
+    for (int i : _range(0, topLevelDatasetCount)) {
+        const QTreeWidgetItem* dataset = ui->prompts_treeWidget->topLevelItem(i);
 
-        if (!hasSpecifications(topLevelDataset)) {
-            if (!hasSelectedPrompts(topLevelDataset)) {
-                continue;
+        if (!hasSpecifications(dataset)) {
+            if (hasSelectedPrompts(dataset)) {
+                datasetArray.append(generateCustomDataset(dataset, getName(dataset), {}, helmDataJson));
             }
-            const QString datasetBase = getName(topLevelDataset);
-            const QString datasetSpec = {};
-
-            const QPair<QString, QString> dsPair{datasetBase, datasetSpec};
-            if (!datasetMetricMap.contains(dsPair)) {
-                datasetMetricMap[dsPair] = {};
-            }
-
-            const QJsonObject customDataset = getDatasetObj(topLevelDataset, datasetBase, datasetSpec, helmDataJson);
-            datasetArray.append(customDataset);
-
-            const QString metric = customDataset[datasetBase]["metric"].toString();
-
-            if (!datasetMetricMap[dsPair].contains(metric)) {
-                datasetMetricMap[dsPair].push_back(metric);
-            }
-
             continue;
         }
 
-        const int subDatasetCount = topLevelDataset->childCount();
-        for (int i = 0; i < subDatasetCount; ++i) {
-            const QTreeWidgetItem* subDataset = topLevelDataset->child(i);
-            if (!hasSelectedPrompts(subDataset)) {
-                continue;
-            }
-
-            const QString dataset_base = getName(topLevelDataset);
-            const QString dataset_spec = getName(subDataset);
-
-            const QPair<QString, QString> dsPair{dataset_base, dataset_spec};
-            if (!datasetMetricMap.contains(dsPair)) {
-                datasetMetricMap[dsPair] = {};
-            }
-
-            const QJsonObject customDataset = getDatasetObj(subDataset, dataset_base, dataset_spec, helmDataJson);
-            datasetArray.append(customDataset);
-
-            const QString metric = customDataset[dataset_base]["metric"].toString();
-
-            if (!datasetMetricMap[dsPair].contains(metric)) {
-                datasetMetricMap[dsPair].push_back(metric);
+        const int subDatasetCount = dataset->childCount();
+        for (int i : _range(0, subDatasetCount)) {
+            const QTreeWidgetItem* subDataset = dataset->child(i);
+            if (hasSelectedPrompts(subDataset)) {
+                datasetArray.append(generateCustomDataset(subDataset, getName(dataset), getName(subDataset), helmDataJson));
             }
         }
     }
 
-    mainObject.insert("compilationName", m_compilationName);
+    // put everything together
+
+    mainObject.insert("compilation_name", m_compilationName);
     mainObject.insert("datasets", datasetArray);
     customCompilation.setObject(mainObject);
+
+    /****************************************
+     * 5. Write to file and notify the user *
+     ****************************************/
+
     outputFile.write(customCompilation.toJson());
 
     PopUp("JSON exported");
+}
+
+bool MainWindow::exportPrerequisitesMet() const
+{
+    return !m_outputPath.isEmpty() && !m_jsonFileName.isEmpty() && !m_compilationName.isEmpty() && !m_helmDataJSON.isEmpty();
+}
+int MainWindow::launchExportOptionsDialog()
+{
+    auto *options = new ExportOptionsDialog(m_outputPath, m_jsonFileName, m_compilationName, m_helmDataJSON);
+    options->setAttribute(Qt::WA_DeleteOnClose);
+    return options->exec();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

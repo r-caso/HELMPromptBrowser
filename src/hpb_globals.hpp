@@ -50,4 +50,5 @@ namespace HPB {
         together = 0xD,
         writer_palmyra = 0xE,
     };
-    } // namespace HPB
+
+} // namespace HPB

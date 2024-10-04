@@ -149,6 +149,9 @@ private:
         LanguageModel(0xE1, "writer_palmyra-x", 100e9),
     };
 
+    bool exportPrerequisitesMet() const;
+    int launchExportOptionsDialog();
+
     void closeEvent(QCloseEvent *event) override;
     void writeSettings();
     void readSettings();

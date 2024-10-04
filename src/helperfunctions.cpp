@@ -91,7 +91,7 @@ QJsonObject getSamples(const QTreeWidgetItem* item)
     QJsonObject samples;
 
     const int childCount = item->childCount();
-    for (int i = 0; i < childCount; ++i) {
+    for (int i : _range(0, childCount)) {
         const QTreeWidgetItem* child = item->child(i);
         if (child->data(HPB::PTIsSelectedColumn, Qt::DisplayRole).toBool()) {
             samples.insert(getPID(child), getCID(child));
@@ -222,7 +222,7 @@ void addPromptsToTree(const QString& dataset,
     QTreeWidgetItem* parent = specItem != nullptr ? specItem : baseItem;
 
     const int instanceCount = static_cast<int>(instances.array().count());
-    for (int i = 0; i < instanceCount; ++i) {
+    for (int i : _range(0, instanceCount)) {
         const QJsonObject obj = instances.array().at(i).toObject();
         const QString prompt = obj["input"].toObject()["text"].toString();
 
@@ -236,7 +236,7 @@ void addPromptsToTree(const QString& dataset,
 
         bool promptIsInTree = false;
         const int numberOfPrompts = parent->childCount();
-        for (int j = 0; j < numberOfPrompts; ++j) {
+        for (int j : _range(0, numberOfPrompts)) {
             QTreeWidgetItem* prompt = parent->child(j);
             if (getPID(prompt) == promptId) {
                 promptIsInTree = true;
@@ -290,7 +290,7 @@ void deleteDatasetFromTree(const QString& datasetName, QTreeWidget* tree)
         for (QTreeWidgetItem* parent : parentList) {
             QTreeWidgetItem* matchingChild = nullptr;
             const int childCount = parent->childCount();
-            for (int i = 0; i < childCount; ++i) {
+            for (int i : _range(0, childCount)) {
                 if (getName(parent->child(i)) == datasetSpec) {
                     matchingChild = parent->child(i);
                 }
@@ -335,7 +335,7 @@ QStringList getSelectedDatasetNames(const QTreeWidget* tree)
     const int topLevelDatasetCount = tree->topLevelItemCount();
 
     // process top level datasets
-    for (int i = 0; i < topLevelDatasetCount; ++i) {
+    for (int i : _range(0, topLevelDatasetCount)) {
         QTreeWidgetItem* parent = tree->topLevelItem(i);
         QString const parentName = parent->data(0, Qt::DisplayRole).toString();
 
@@ -351,7 +351,8 @@ QStringList getSelectedDatasetNames(const QTreeWidget* tree)
 
         // dataset has sub-datasets
         // process each sub-dataset
-        for (int j = 0; j < parent->childCount(); ++j) {
+        const int childCount = parent->childCount();
+        for (int j : _range(0, childCount)) {
             QTreeWidgetItem* child = parent->child(j);
             QString const childName = child->data(0, Qt::DisplayRole).toString();
 
@@ -370,7 +371,7 @@ bool hasSelectedPrompts(const QTreeWidgetItem* item) {
     bool hasSelectedPrompts = false;
 
     const int promptCount = item->childCount();
-    for (int i = 0; i < promptCount; ++i) {
+    for (int i : _range(0, promptCount)) {
         if (isSelected(item->child(i))) {
             hasSelectedPrompts = true;
             break;
@@ -434,14 +435,14 @@ QPair<QString, QString> splitDatasetName(const QString& dataset)
 void transformDatasetTree(QTreeWidget* datasetTree, const std::function<void(QTreeWidgetItem*)>& transformation)
 {
     const int datasetCount = datasetTree->topLevelItemCount();
-    for (int i = 0; i < datasetCount; ++i) {
+    for (int i : _range(0, datasetCount)) {
         QTreeWidgetItem* dataset = datasetTree->topLevelItem(i);
         if (dataset->childCount() == 0) {
             transformation(dataset);
             continue;
         }
         const int specificationCount = dataset->childCount();
-        for (int j = 0; j < specificationCount; ++j) {
+        for (int j : _range(0, specificationCount)) {
             transformation(dataset->child(j));
         }
     }
