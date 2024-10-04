@@ -121,31 +121,13 @@ QJsonObject loadHelmDataConfig(const QString& helmDataJson)
 
     return helmDatasetConfig.toVariant().toJsonObject();
 }
-QString prettyPrint(const QJsonObject& obj, const QString& dataset)
+QString getPromptText(const QJsonObject& obj, const QString& dataset)
 {
-    const QJsonArray references = obj["references"].toArray();
     const QString promptId = obj["id"].toString();
     QString inputText;
 
     if (!obj["input"].toObject()["text"].toString().isEmpty()) {
         inputText = obj["input"].toObject()["text"].toString() + "\n\n";
-    }
-
-    QString referencesText;
-
-    if (!references.empty()) {
-        referencesText += "REFERENCES:\n\n";
-        for (auto&& value : references) {
-            const QJsonObject reference = value.toObject();
-            referencesText += "- " + reference["output"].toObject()["text"].toString();
-            referencesText += " [ ";
-            const QJsonArray tags = reference["tags"].toArray();
-            for (auto&& tag : tags) {
-                referencesText += tag.toString() + " ";
-            }
-            referencesText += "]\n";
-        }
-        referencesText += "\n";
     }
 
     QString subsplit;
@@ -161,11 +143,34 @@ QString prettyPrint(const QJsonObject& obj, const QString& dataset)
     }
 
     QString const str = "DATASET: " + dataset + "\n" + "PROMPT ID: " + promptId + "\n\n"
-                        + inputText + referencesText + subsplit + perturbed;
+                        + inputText + subsplit + perturbed;
 
     return str.trimmed();
 }
+QString getReferencesText(const QJsonObject& obj, const QString& dataset)
+{
+    const QJsonArray references = obj["references"].toArray();
 
+    if (references.empty()) {
+        return "";
+    }
+
+    QString referencesText;
+
+    referencesText += "REFERENCES:\n\n";
+    for (auto&& value : references) {
+        const QJsonObject reference = value.toObject();
+        referencesText += "- " + reference["output"].toObject()["text"].toString();
+        referencesText += " [ ";
+        const QJsonArray tags = reference["tags"].toArray();
+        for (auto&& tag : tags) {
+            referencesText += tag.toString() + " ";
+        }
+        referencesText += "]\n";
+    }
+
+    return referencesText.trimmed();
+}
 
 /******************************************************
  * Dataset tree and prompt tree convenience functions *
@@ -256,7 +261,8 @@ void addPromptsToTree(const QString& dataset,
         child->setData(HPB::PTDatasetBaseColumn, Qt::DisplayRole, datasetBase);
         child->setData(HPB::PTDatasetSpecColumn, Qt::DisplayRole, datasetSpec);
         child->setData(HPB::PTIsPromptColumn, Qt::DisplayRole, true);
-        child->setData(HPB::PTPromptContentsColumn, Qt::DisplayRole, prettyPrint(obj, dataset));
+        child->setData(HPB::PTPromptContentsColumn, Qt::DisplayRole, getPromptText(obj, dataset));
+        child->setData(HPB::PTReferencesColumn, Qt::DisplayRole, getReferencesText(obj, dataset));
         child->setData(HPB::PTHasSpecificationsColumn, Qt::DisplayRole, false);
         child->setData(HPB::PTIsSelectedColumn, Qt::DisplayRole, false);
         parent->addChild(child);

@@ -1168,8 +1168,9 @@ void MainWindow::on_prompts_treeWidget_currentItemChanged(QTreeWidgetItem *curre
 
     ui->delete_pushButton->setEnabled(false);
     ui->prompt_plainTextEdit->clear();
-    const QString prompt = getPrompt(current);
-    ui->prompt_plainTextEdit->insertPlainText(prompt);
+    ui->references_plainTextEdit->clear();
+    ui->prompt_plainTextEdit->insertPlainText(getPrompt(current));
+    ui->references_plainTextEdit->insertPlainText(getReferences(current));
 }
 
 /**************************
