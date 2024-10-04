@@ -23,7 +23,7 @@ void Warn(const QString& message);
  * QJson convenience functions *
  *******************************/
 
-QJsonObject getDatasetObj(const QTreeWidgetItem* item, const QString& datasetBase, const QString& datasetSpec, const QJsonObject& helmDataJson);
+QJsonObject generateCustomDataset(const QTreeWidgetItem* item, const QString& datasetBase, const QString& datasetSpec, const QJsonObject& helmDataJson);
 QJsonObject getSamples(const QTreeWidgetItem* item);
 QJsonDocument getTaskInstances(const QString& taskDir, const QString& helmDataPath);
 QJsonObject loadHelmDataConfig(const QString& helmDataJson);

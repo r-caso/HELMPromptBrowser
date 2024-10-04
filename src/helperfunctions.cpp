@@ -55,7 +55,7 @@ void Warn(const QString& message)
  * QJson convenience functions *
  *******************************/
 
-QJsonObject getDatasetObj(const QTreeWidgetItem* item, const QString& datasetBase, const QString& datasetSpec, const QJsonObject& helmDataJson)
+QJsonObject generateCustomDataset(const QTreeWidgetItem* item, const QString& datasetBase, const QString& datasetSpec, const QJsonObject& helmDataJson)
 {
     QString metric;
     QString split;
