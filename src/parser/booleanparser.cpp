@@ -46,6 +46,9 @@ void BooleanParser::tokenize(const QString& formula)
     for (QChar const c : formula) {
         if (!isValidQueryChar(c) && !ident.isEmpty()) {
             if (!symbol_stack.empty()) {
+                if (c != '"') {
+                    ident.push_back(c);
+                }
                 continue;
             }
             m_TokenList.push_back({ ident, TokenType::IDENTIFIER });
