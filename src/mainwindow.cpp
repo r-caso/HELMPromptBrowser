@@ -1107,6 +1107,7 @@ void MainWindow::on_clear_pushButton_clicked()
 {
     ui->prompts_treeWidget->clear();
     ui->prompt_plainTextEdit->clear();
+    ui->references_plainTextEdit->clear();
     ui->delete_pushButton->setEnabled(false);
     ui->clear_pushButton->setEnabled(false);
     ui->selectPrompt_pushButton->setEnabled(false);
