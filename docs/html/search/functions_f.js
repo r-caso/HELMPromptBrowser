@@ -1,0 +1,7 @@
+var searchData=
+[
+  ['todnf_0',['toDNF',['../logic_8cpp.html#a93fd30eed46429bed3e7af0be6392cf3',1,'toDNF(const Expression &amp;expr):&#160;logic.cpp'],['../logic_8hpp.html#a93fd30eed46429bed3e7af0be6392cf3',1,'toDNF(const Expression &amp;expr):&#160;logic.cpp']]],
+  ['tonnf_1',['toNNF',['../logic_8cpp.html#a586b6a4bbacf49f305b49482e0b3f12d',1,'toNNF(const Expression &amp;expr):&#160;logic.cpp'],['../logic_8hpp.html#a586b6a4bbacf49f305b49482e0b3f12d',1,'toNNF(const Expression &amp;expr):&#160;logic.cpp']]],
+  ['transformdatasettree_2',['transformDatasetTree',['../helperfunctions_8cpp.html#affaef2cc7afc2550b3bfe227f2ba70b5',1,'transformDatasetTree(QTreeWidget *datasetTree, const std::function&lt; void(QTreeWidgetItem *)&gt; &amp;transformation):&#160;helperfunctions.cpp'],['../helperfunctions_8hpp.html#affaef2cc7afc2550b3bfe227f2ba70b5',1,'transformDatasetTree(QTreeWidget *datasetTree, const std::function&lt; void(QTreeWidgetItem *)&gt; &amp;transformation):&#160;helperfunctions.cpp']]],
+  ['transformprompttree_3',['transformPromptTree',['../helperfunctions_8cpp.html#a5db33555bac0f4792628ab196cbf0ebb',1,'transformPromptTree(QTreeWidget *promptTree, const std::function&lt; void(QTreeWidgetItem *)&gt; &amp;transformation):&#160;helperfunctions.cpp'],['../helperfunctions_8hpp.html#a5db33555bac0f4792628ab196cbf0ebb',1,'transformPromptTree(QTreeWidget *promptTree, const std::function&lt; void(QTreeWidgetItem *)&gt; &amp;transformation):&#160;helperfunctions.cpp']]]
+];
