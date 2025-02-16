@@ -19,6 +19,14 @@
  * QMessageBoxes *
  *****************/
 
+/**
+ * @brief Displays a message box with Yes/No options and an optional "Don't show again" checkbox.
+ *
+ * @param text The main text of the message box.
+ * @param informativeText Additional information displayed in the message box.
+ * @param dontShowAgain Reference to a boolean variable indicating if the "Don't show again" checkbox was checked.
+ * @return int The button pressed by the user (QMessageBox::Yes or QMessageBox::No).
+ */
 int Ask(const QString& text, const QString& informativeText, bool& dontShowAgain) {
     QMessageBox msg;
     msg.setText(text);
@@ -33,6 +41,12 @@ int Ask(const QString& text, const QString& informativeText, bool& dontShowAgain
     dontShowAgain = checkbox->checkState();
     return result;
 }
+
+/**
+ * @brief Displays a popup message box that automatically closes after 1.5 seconds.
+ *
+ * @param message The message to be displayed in the popup.
+ */
 void PopUp(const QString& message)
 {
     QMessageBox msgBox;
@@ -42,6 +56,12 @@ void PopUp(const QString& message)
     QTimer::singleShot(popupDuration, &msgBox, &QMessageBox::accept);
     msgBox.exec();
 }
+
+/**
+ * @brief Displays a warning message box.
+ *
+ * @param message The warning message to be displayed.
+ */
 void Warn(const QString& message)
 {
     QMessageBox msg;
@@ -55,6 +75,15 @@ void Warn(const QString& message)
  * QJson convenience functions *
  *******************************/
 
+/**
+ * @brief Generates a custom dataset JSON object based on tree widget item and dataset specifications.
+ *
+ * @param item The tree widget item representing a dataset entry.
+ * @param datasetBase The base name of the dataset.
+ * @param datasetSpec The dataset specification (optional).
+ * @param helmDataJson The JSON object containing dataset metadata.
+ * @return QJsonObject The generated dataset JSON object.
+ */
 QJsonObject generateCustomDataset(const QTreeWidgetItem* item, const QString& datasetBase, const QString& datasetSpec, const QJsonObject& helmDataJson)
 {
     QString metric;
@@ -86,6 +115,13 @@ QJsonObject generateCustomDataset(const QTreeWidgetItem* item, const QString& da
 
     return dataset;
 }
+
+/**
+ * @brief Extracts sample data from a QTreeWidgetItem and returns it as a JSON object.
+ *
+ * @param item The tree widget item representing a dataset entry.
+ * @return QJsonObject The extracted samples.
+ */
 QJsonObject getSamples(const QTreeWidgetItem* item)
 {
     QJsonObject samples;
@@ -100,6 +136,14 @@ QJsonObject getSamples(const QTreeWidgetItem* item)
 
     return samples;
 }
+
+/**
+ * @brief Loads task instances from a JSON file within the specified directory.
+ *
+ * @param taskDir The directory containing the instances file.
+ * @param helmDataPath The base path for the dataset.
+ * @return QJsonDocument The loaded task instances as a JSON document.
+ */
 QJsonDocument getTaskInstances(const QString& taskDir, const QString& helmDataPath)
 {
     QFile instancesFile(helmDataPath + "/" + taskDir + "/instances.json");
@@ -111,6 +155,13 @@ QJsonDocument getTaskInstances(const QString& taskDir, const QString& helmDataPa
     }
     return QJsonDocument::fromJson(instancesFile.readAll());
 }
+
+/**
+ * @brief Loads the configuration for Helm dataset from a JSON file.
+ *
+ * @param helmDataJson Path to the JSON file containing the Helm dataset configuration.
+ * @return QJsonObject The parsed JSON object containing the dataset configuration.
+ */
 QJsonObject loadHelmDataConfig(const QString& helmDataJson)
 {
     QFile helmDataJson_file(helmDataJson);
@@ -121,6 +172,14 @@ QJsonObject loadHelmDataConfig(const QString& helmDataJson)
 
     return helmDatasetConfig.toVariant().toJsonObject();
 }
+
+/**
+ * @brief Constructs a formatted prompt text from a JSON object.
+ *
+ * @param obj The JSON object containing prompt details.
+ * @param dataset The dataset name associated with the prompt.
+ * @return QString The formatted prompt text.
+ */
 QString getPromptText(const QJsonObject& obj, const QString& dataset)
 {
     const QString promptId = obj["id"].toString();
@@ -147,6 +206,15 @@ QString getPromptText(const QJsonObject& obj, const QString& dataset)
 
     return str.trimmed();
 }
+
+
+/**
+ * @brief Retrieves formatted references text from a JSON object.
+ *
+ * @param obj The JSON object containing reference details.
+ * @param dataset The dataset name associated with the references.
+ * @return QString The formatted references text.
+ */
 QString getReferencesText(const QJsonObject& obj, const QString& dataset)
 {
     const QJsonArray references = obj["references"].toArray();
@@ -176,6 +244,16 @@ QString getReferencesText(const QJsonObject& obj, const QString& dataset)
  * Dataset tree and prompt tree convenience functions *
  ******************************************************/
 
+/**
+ * @brief Adds prompts matching search criteria to a QTreeWidget.
+ *
+ * @param dataset The dataset name.
+ * @param instances The JSON document containing instance data.
+ * @param queries List of query pairs (inclusions and exclusions).
+ * @param searchIsCaseSensitive Boolean flag indicating case-sensitive search.
+ * @param searchIsRegex Boolean flag indicating if search terms are regular expressions.
+ * @param tree The QTreeWidget to populate with matched prompts.
+ */
 void addPromptsToTree(const QString& dataset,
                       const QJsonDocument& instances,
                       const QList<QPair<QStringList, QStringList>>& queries,
@@ -277,22 +355,25 @@ void addPromptsToTree(const QString& dataset,
         tree->addTopLevelItem(baseItem);
     }
 }
+
+/**
+ * @brief Deletes a dataset and its prompts from the QTreeWidget.
+ *
+ * @param datasetName The name of the dataset to delete.
+ * @param tree The QTreeWidget containing the dataset structure.
+ */
 void deleteDatasetFromTree(const QString& datasetName, QTreeWidget* tree)
 {
     auto [datasetBase, datasetSpec] = splitDatasetName(datasetName);
 
     if (datasetSpec.isEmpty()) {
-        QList<QTreeWidgetItem *> const deletionList = tree->findItems(datasetBase,
-                                                                       Qt::MatchExactly,
-                                                                       1);
+        QList<QTreeWidgetItem *> const deletionList = tree->findItems(datasetBase, Qt::MatchExactly, 1);
         for (QTreeWidgetItem* dataset : deletionList) {
             delete dataset;
         }
     }
     else {
-        QList<QTreeWidgetItem *> const parentList = tree->findItems(datasetBase,
-                                                                     Qt::MatchExactly,
-                                                                     1);
+        QList<QTreeWidgetItem *> const parentList = tree->findItems(datasetBase, Qt::MatchExactly, 1);
         for (QTreeWidgetItem* parent : parentList) {
             QTreeWidgetItem* matchingChild = nullptr;
             const int childCount = parent->childCount();
@@ -311,6 +392,13 @@ void deleteDatasetFromTree(const QString& datasetName, QTreeWidget* tree)
         }
     }
 }
+
+/**
+ * @brief Generates a list of file filters for dataset directories based on the OS.
+ *
+ * @param datasetNames The list of dataset names.
+ * @return QStringList The list of formatted dataset filters.
+ */
 QStringList getFiltersFromDatasetList(const QStringList& datasetNames)
 {
     const QString operatingSystem = QSysInfo::productType();
@@ -320,6 +408,14 @@ QStringList getFiltersFromDatasetList(const QStringList& datasetNames)
     }
     return filters;
 }
+
+/**
+ * @brief Retrieves Helm task directories based on dataset names and path.
+ *
+ * @param datasets The list of dataset names.
+ * @param helmDataPath The base path for Helm data.
+ * @return QStringList The list of task directories.
+ */
 QStringList getHelmTaskDirs(const QStringList& datasets, const QString& helmDataPath)
 {
     const QStringList filters = getFiltersFromDatasetList(datasets);
@@ -334,6 +430,13 @@ QStringList getHelmTaskDirs(const QStringList& datasets, const QString& helmData
 
     return taskDirs;
 }
+
+/**
+ * @brief Retrieves the list of selected datasets from a QTreeWidget.
+ *
+ * @param tree The QTreeWidget representing the dataset structure.
+ * @return QStringList The list of selected dataset names.
+ */
 QStringList getSelectedDatasetNames(const QTreeWidget* tree)
 {
     QStringList selectedDatasets;
@@ -373,6 +476,13 @@ QStringList getSelectedDatasetNames(const QTreeWidget* tree)
     }
     return selectedDatasets;
 }
+
+/**
+ * @brief Checks if a QTreeWidgetItem has any selected prompts.
+ *
+ * @param item The tree widget item to check.
+ * @return bool True if the item has selected prompts, false otherwise.
+ */
 bool hasSelectedPrompts(const QTreeWidgetItem* item) {
     bool hasSelectedPrompts = false;
 
@@ -386,6 +496,26 @@ bool hasSelectedPrompts(const QTreeWidgetItem* item) {
 
     return hasSelectedPrompts;
 }
+
+/**
+ * @brief Determines if a given prompt matches any query based on inclusion and exclusion terms.
+ *
+ * This function checks if the provided `prompt` satisfies at least one query from `queries`.
+ * Each query consists of inclusion and exclusion term lists:
+ * - The prompt must contain all inclusion terms.
+ * - The prompt must not contain any exclusion terms.
+ *
+ * The function supports both case-sensitive and case-insensitive searches, as well as
+ * regular expression matching.
+ *
+ * @param prompt The text to be matched against the queries.
+ * @param queries A list of queries, where each query contains a pair of:
+ *                - A list of inclusion terms (all must be present).
+ *                - A list of exclusion terms (none must be present).
+ * @param searchIsCaseSensitive If true, the search is case-sensitive; otherwise, it's case-insensitive.
+ * @param searchIsRegex If true, terms are treated as regular expressions; otherwise, they are treated as plain text.
+ * @return True if the prompt matches at least one query (meeting all inclusions and avoiding all exclusions); otherwise, false.
+ */
 bool matches(const QString& prompt,
              const QList<QPair<QStringList, QStringList>>& queries,
              bool searchIsCaseSensitive,
@@ -414,6 +544,13 @@ bool matches(const QString& prompt,
 
     return match;
 }
+
+/**
+ * @brief Splits a dataset name into base and specification parts.
+ *
+ * @param dataset The dataset name.
+ * @return QPair<QString, QString> The separated base name and specification.
+ */
 QPair<QString, QString> splitDatasetName(const QString& dataset)
 {
     QString datasetBase;
@@ -438,6 +575,13 @@ QPair<QString, QString> splitDatasetName(const QString& dataset)
 
     return { datasetBase, datasetSpec };
 }
+
+/**
+ * @brief Transforms all dataset entries in a QTreeWidget using a given transformation function.
+ *
+ * @param datasetTree The QTreeWidget representing datasets.
+ * @param transformation The transformation function to apply.
+ */
 void transformDatasetTree(QTreeWidget* datasetTree, const std::function<void(QTreeWidgetItem*)>& transformation)
 {
     const int datasetCount = datasetTree->topLevelItemCount();
@@ -453,6 +597,13 @@ void transformDatasetTree(QTreeWidget* datasetTree, const std::function<void(QTr
         }
     }
 }
+
+/**
+ * @brief Transforms all prompt entries in a QTreeWidget using a given transformation function.
+ *
+ * @param promptTree The QTreeWidget representing prompts.
+ * @param transformation The transformation function to apply.
+ */
 void transformPromptTree(QTreeWidget* promptTree, const std::function<void(QTreeWidgetItem*)>& transformation)
 {
     const int datasetCount = promptTree->topLevelItemCount();
